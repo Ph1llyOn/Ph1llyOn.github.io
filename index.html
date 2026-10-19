@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Filippo Marcon — Phill · Sviluppatore & Autore</title>
+<meta name="description" content="Filippo Marcon (Phill): sviluppatore, Sr. Admin di IslandMC e autore self-published di 3:17.">
+<style>
+  :root{
+    --bg:#0b0e14; --surface:#12161f; --surface2:#171c28;
+    --text:#e8ecf4; --muted:#9aa3b5; --line:#232a3a;
+    --accent:#7c6cf0; --accent2:#38c6f4;
+    --radius:16px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+  .wrap{max-width:960px;margin:0 auto;padding:0 24px}
+  header{position:sticky;top:0;z-index:50;background:rgba(11,14,20,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  nav{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .logo{font-weight:800;font-size:1.15rem;letter-spacing:.5px}
+  .logo span{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .links{display:flex;gap:22px;font-size:.95rem}
+  .links a{text-decoration:none;color:var(--muted);transition:color .2s}
+  .links a:hover{color:var(--text)}
+  @media(max-width:640px){.links{display:none}}
+  .hero{padding:110px 0 80px;text-align:center;position:relative;overflow:hidden}
+  .hero::before{content:"";position:absolute;inset:-40% -20% auto;height:560px;background:radial-gradient(closest-side,rgba(124,108,240,.22),transparent),radial-gradient(closest-side,rgba(56,198,244,.14),transparent);background-position:20% 30%,80% 20%;background-repeat:no-repeat;pointer-events:none}
+  .avatar{width:104px;height:104px;border-radius:50%;margin:0 auto 22px;display:flex;align-items:center;justify-content:center;font-size:2.4rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0b0e14;position:relative}
+  h1{font-size:clamp(2.2rem,6vw,3.6rem);line-height:1.1;letter-spacing:-1px;position:relative}
+  h1 .grad{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .tagline{margin-top:14px;color:var(--muted);font-size:1.15rem;position:relative}
+  .cta-row{margin-top:32px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;position:relative}
+  .btn{display:inline-block;padding:13px 28px;border-radius:999px;text-decoration:none;font-weight:600;font-size:1rem;transition:transform .15s,box-shadow .15s}
+  .btn:hover{transform:translateY(-2px)}
+  .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#0b0e14}
+  .btn.ghost{border:1px solid var(--line);color:var(--text);background:var(--surface)}
+  section{padding:72px 0}
+  h2{font-size:1.7rem;letter-spacing:-.5px;margin-bottom:8px}
+  .sub{color:var(--muted);margin-bottom:32px;max-width:640px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:26px;transition:transform .18s,border-color .18s}
+  .card:hover{transform:translateY(-4px);border-color:var(--accent)}
+  .card .kicker{font-size:.78rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent2);font-weight:700;margin-bottom:10px}
+  .card h3{font-size:1.2rem;margin-bottom:8px}
+  .card p{color:var(--muted);font-size:.96rem}
+  .card .meta{margin-top:14px;font-size:.85rem;color:var(--muted)}
+  .skills{display:flex;flex-wrap:wrap;gap:10px}
+  .skill{background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:9px 18px;font-size:.92rem;color:var(--text)}
+  .about-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:32px;font-size:1.05rem;color:var(--muted)}
+  .about-card strong{color:var(--text)}
+  .social{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
+  .social a{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 20px;text-decoration:none;font-weight:600;transition:border-color .18s,transform .15s}
+  .social a:hover{border-color:var(--accent);transform:translateY(-2px)}
+  footer{border-top:1px solid var(--line);padding:32px 0;color:var(--muted);font-size:.9rem;text-align:center}
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s,transform .6s}
+  .reveal.on{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <nav>
+      <div class="logo">phill<span>marcon</span></div>
+      <div class="links">
+        <a href="#chi-sono">Chi sono</a>
+        <a href="#progetti">Progetti</a>
+        <a href="#competenze">Competenze</a>
+        <a href="#contatti">Contatti</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="avatar">P</div>
+    <h1>Filippo Marcon<br><span class="grad">"Phill"</span></h1>
+    <p class="tagline">Sviluppatore &amp; autore self-published · Veneto, Italia</p>
+    <div class="cta-row">
+      <a class="btn primary" href="#progetti">I miei progetti</a>
+      <a class="btn ghost" href="#contatti">Contattami</a>
+    </div>
+  </div>
+
+  <section id="chi-sono">
+    <h2>Chi sono</h2>
+    <p class="sub">In breve</p>
+    <div class="about-card reveal">
+      Ho 18 anni e vengo dal Veneto. Sono uno <strong>studente IT</strong> e uno <strong>sviluppatore</strong>:
+      scrivo codice in PHP e JavaScript, gestisco infrastrutture server e sviluppo plugin per Minecraft.
+      Come <strong>Sr. Admin e developer di IslandMC</strong> curo siti web, plugin, bot Discord e database di un server italiano.
+      Parallelamente scrivo: ho pubblicato <strong>"3:17"</strong> su Amazon KDP e sto lavorando al romanzo illustrato
+      <strong>"Diario di un Content Creator"</strong>.
+    </div>
+  </section>
+
+  <section id="progetti">
+    <h2>Progetti</h2>
+    <p class="sub">Cosa costruisco quando non studio</p>
+    <div class="grid">
+      <div class="card reveal">
+        <div class="kicker">Gaming · Community</div>
+        <h3>IslandMC</h3>
+        <p>Server Minecraft italiano dove sono Sr. Admin e developer: infrastruttura, plugin custom, bot Discord, pannelli admin e database.</p>
+        <div class="meta">Ruolo: Sr. Admin &amp; Developer</div>
+      </div>
+      <div class="card reveal">
+        <div class="kicker">Libro · Self-publishing</div>
+        <h3>3:17</h3>
+        <p>"La storia che ti trova quando smetti di cercarla." Viaggio nella mente, tra memoria, coscienza e libero arbitrio. Pubblicato su Amazon KDP.</p>
+        <div class="meta"><a href="https://www.amazon.com/author/filippomarcon" target="_blank" rel="noopener">Pagina autore su Amazon →</a></div>
+      </div>
+      <div class="card reveal">
+        <div class="kicker">Libro · In lavorazione</div>
+        <h3>Diario di un Content Creator</h3>
+        <p>Romanzo illustrato per ragazzi: Max Kennedy, 14 anni, e la sua scalata nel mondo dei content creator. Hardcover in arrivo.</p>
+        <div class="meta">Stato: copertina in lavorazione</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="competenze">
+    <h2>Competenze</h2>
+    <p class="sub">Il mio stack</p>
+    <div class="skills reveal">
+      <span class="skill">PHP</span>
+      <span class="skill">JavaScript</span>
+      <span class="skill">Plugin Minecraft</span>
+      <span class="skill">Infrastruttura server</span>
+      <span class="skill">Bot Discord</span>
+      <span class="skill">Database</span>
+      <span class="skill">Linux &amp; SSH</span>
+      <span class="skill">Amazon KDP</span>
+      <span class="skill">Laravel</span>
+      <span class="skill">Flutter</span>
+    </div>
+  </section>
+
+  <section id="contatti">
+    <h2>Contatti</h2>
+    <p class="sub">Dove trovarmi</p>
+    <div class="social reveal">
+      <a href="https://github.com/Ph1llyOn" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://www.instagram.com/filippomarcon.art" target="_blank" rel="noopener">Instagram</a>
+      <a href="https://www.tiktok.com/@filippomarcon.art" target="_blank" rel="noopener">TikTok</a>
+      <a href="https://www.amazon.com/author/filippomarcon" target="_blank" rel="noopener">Amazon</a>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap">© 2026 Filippo Marcon · Fatto a mano, senza template</div>
+</footer>
+
+<script>
+  const io = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting){ e.target.classList.add('on'); io.unobserve(e.target);} }), {threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
