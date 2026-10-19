@@ -52,12 +52,20 @@
   }
 
   /* ---------- hero ---------- */
-  .hero{padding:104px 0 72px;position:relative;overflow:hidden}
-  .hero::before{content:"";position:absolute;inset:0;background:radial-gradient(520px 320px at 18% 22%,rgba(124,108,240,.20),transparent 70%),radial-gradient(460px 300px at 84% 18%,rgba(56,198,244,.13),transparent 70%);pointer-events:none}
+  .hero{padding:110px 0 84px;position:relative;overflow:hidden}
+  .orb{position:absolute;border-radius:50%;filter:blur(100px);opacity:.45;pointer-events:none;will-change:transform}
+  .orb.a{width:440px;height:440px;background:#7c6cf0;top:-140px;left:-120px;animation:drift 16s ease-in-out infinite alternate}
+  .orb.b{width:380px;height:380px;background:#38c6f4;top:30px;right:-140px;animation:drift 20s ease-in-out infinite alternate-reverse}
+  .orb.c{width:280px;height:280px;background:#b04cf0;bottom:-160px;left:38%;animation:drift 24s ease-in-out infinite alternate}
+  @keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(70px,50px) scale(1.18)}}
   .hero-inner{position:relative}
+  .scroll-cue{display:inline-flex;margin-top:52px;width:26px;height:44px;border:2px solid var(--faint);border-radius:14px;position:relative;opacity:.7;transition:opacity .2s}
+  .scroll-cue:hover{opacity:1}
+  .scroll-cue span{position:absolute;left:50%;top:8px;width:4px;height:9px;margin-left:-2px;border-radius:3px;background:var(--accent2);animation:cue 1.8s ease-in-out infinite}
+  @keyframes cue{0%{transform:translateY(0);opacity:1}60%{transform:translateY(14px);opacity:0}100%{transform:translateY(0);opacity:0}}
   .kicker-mono{font-family:var(--mono);font-size:.88rem;color:var(--accent2);margin-bottom:18px}
   .kicker-mono::before{content:"$ "}
-  .avatar-img{width:104px;height:104px;border-radius:30px;object-fit:cover;margin-bottom:26px;box-shadow:0 12px 40px rgba(124,108,240,.35);border:1px solid var(--line);background:var(--surface)}
+  .avatar-img{width:132px;height:132px;border-radius:36px;object-fit:cover;margin-bottom:28px;border:3px solid transparent;background:linear-gradient(#141926,#141926) padding-box,linear-gradient(135deg,var(--accent),var(--accent2)) border-box;box-shadow:0 18px 54px rgba(124,108,240,.45)}
   h1{font-size:clamp(2.4rem,7vw,4rem);line-height:1.05;letter-spacing:-1.5px;font-weight:800}
   h1 .grad{background:linear-gradient(92deg,var(--accent) 10%,var(--accent2) 90%);-webkit-background-clip:text;background-clip:text;color:transparent}
   .tagline{margin-top:16px;color:var(--muted);font-size:clamp(1.02rem,2.4vw,1.22rem);max-width:600px}
@@ -83,8 +91,18 @@
   @media(max-width:640px){.about-card{padding:24px}}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
-  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:28px;display:flex;flex-direction:column;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
-  .card:hover{transform:translateY(-4px);border-color:rgba(124,108,240,.6);box-shadow:0 16px 40px rgba(0,0,0,.35)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:28px;display:flex;flex-direction:column;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;overflow:hidden}
+  .card:hover{transform:translateY(-5px);border-color:rgba(124,108,240,.65);box-shadow:0 20px 48px rgba(0,0,0,.4)}
+  .card-art{height:130px;border-radius:12px;margin:-28px -28px 22px;position:relative;overflow:hidden;display:flex;align-items:flex-end;padding:16px 20px}
+  .card-art::after{content:attr(data-mark);position:absolute;right:8px;top:-14px;font-size:5.2rem;font-weight:800;letter-spacing:-3px;color:rgba(255,255,255,.16);line-height:1;pointer-events:none}
+  .card-art span{position:relative;font-family:var(--mono);font-size:.8rem;letter-spacing:1.5px;color:rgba(255,255,255,.92);text-transform:uppercase}
+  .art-mc{background:linear-gradient(120deg,#0f5132,#1d9e6b 60%,#35d0a0),repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 12px,transparent 12px 24px)}
+  .art-book{background:linear-gradient(120deg,#2b1a5e,#6a3df0 65%,#a06cf5),repeating-linear-gradient(-45deg,rgba(255,255,255,.05) 0 12px,transparent 12px 24px)}
+  .art-diario{background:linear-gradient(120deg,#7a3a0e,#e07b1f 60%,#f5b04c),repeating-linear-gradient(0deg,rgba(255,255,255,.07) 0 2px,transparent 2px 26px)}
+  .card.featured{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:0;padding:0}
+  .card.featured .card-art{height:100%;min-height:260px;margin:0;border-radius:0}
+  .card.featured .card-body{padding:32px;display:flex;flex-direction:column}
+  @media(max-width:640px){.card.featured{grid-template-columns:1fr}.card.featured .card-art{min-height:170px}}
   .card .kicker{font-size:.76rem;text-transform:uppercase;letter-spacing:1.6px;color:var(--accent2);font-weight:700;margin-bottom:12px;font-family:var(--mono)}
   .card h3{font-size:1.25rem;margin-bottom:10px;letter-spacing:-.3px}
   .card p{color:var(--muted);font-size:.97rem;flex:1}
@@ -111,6 +129,12 @@
   footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
   @media(max-width:640px){footer .wrap{justify-content:center;text-align:center}}
 
+
+  .ticker{overflow:hidden;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:20px 0;margin:8px 0 0;mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+  .ticker-track{display:flex;gap:56px;width:max-content;animation:tick 30s linear infinite;font-family:var(--mono);font-size:.92rem;color:var(--faint);white-space:nowrap}
+  .ticker-track b{color:var(--accent2);font-weight:600}
+  @keyframes tick{to{transform:translateX(-50%)}}
+
   /* ---------- reveal (progressive enhancement) ---------- */
   .js .reveal{opacity:0;transform:translateY(20px);transition:opacity .55s ease,transform .55s ease}
   .js .reveal.on{opacity:1;transform:none}
@@ -120,6 +144,8 @@
     .js .reveal{opacity:1;transform:none;transition:none}
     .btn,.card,.skill,.social a{transition:none}
     .btn:hover,.card:hover,.skill:hover,.social a:hover{transform:none}
+    .orb,.ticker-track,.scroll-cue span{animation:none}
+    .scroll-cue{display:none}
   }
 </style>
 </head>
@@ -144,6 +170,9 @@
 <div class="wrap" id="top">
 
   <div class="hero">
+    <div class="orb a" aria-hidden="true"></div>
+    <div class="orb b" aria-hidden="true"></div>
+    <div class="orb c" aria-hidden="true"></div>
     <div class="hero-inner">
       <p class="kicker-mono">ciao, sono</p>
       <img class="avatar-img" src="data:image/jpeg;base64,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" alt="Foto di Filippo Marcon" width="104" height="104" fetchpriority="high">
@@ -158,6 +187,14 @@
         <span><b>focus</b> · programmazione</span>
         <span><b>status</b> · studente IT</span>
       </div>
+      <a class="scroll-cue" href="#chi-sono" aria-label="Scorri ai contenuti"><span></span></a>
+    </div>
+  </div>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span><b>▸</b> PHP</span><span><b>▸</b> JavaScript</span><span><b>▸</b> Laravel</span><span><b>▸</b> Flutter</span><span><b>▸</b> Bot Discord</span><span><b>▸</b> Plugin Minecraft</span><span><b>▸</b> Linux &amp; SSH</span><span><b>▸</b> Database</span>
+      <span><b>▸</b> PHP</span><span><b>▸</b> JavaScript</span><span><b>▸</b> Laravel</span><span><b>▸</b> Flutter</span><span><b>▸</b> Bot Discord</span><span><b>▸</b> Plugin Minecraft</span><span><b>▸</b> Linux &amp; SSH</span><span><b>▸</b> Database</span>
     </div>
   </div>
 
@@ -180,21 +217,26 @@
     <h2 id="h-progetti">Progetti</h2>
     <p class="sub">Le cose a cui dedico più tempo.</p>
     <div class="grid">
-      <article class="card reveal">
-        <p class="kicker">gaming · community</p>
-        <h3>IslandMC</h3>
-        <p>Server Minecraft italiano dove ricopro il ruolo di Sr. Admin e developer: infrastruttura, plugin custom, bot Discord, pannelli di amministrazione e database.</p>
-        <div class="tags"><span class="tag">Minecraft</span><span class="tag">Discord</span><span class="tag">Database</span><span class="tag">Web</span></div>
-        <p class="meta"><span class="soon">Sr. Admin &amp; Developer</span></p>
+      <article class="card featured reveal">
+        <div class="card-art art-mc" data-mark="MC"><span>server minecraft italiano</span></div>
+        <div class="card-body">
+          <p class="kicker">gaming · community</p>
+          <h3>IslandMC</h3>
+          <p>Server Minecraft italiano dove ricopro il ruolo di Sr. Admin e developer: infrastruttura, plugin custom, bot Discord, pannelli di amministrazione e database.</p>
+          <div class="tags"><span class="tag">Minecraft</span><span class="tag">Discord</span><span class="tag">Database</span><span class="tag">Web</span></div>
+          <p class="meta"><span class="soon">Sr. Admin &amp; Developer</span></p>
+        </div>
       </article>
       <article class="card reveal">
-        <p class="kicker">libro · self-publishing</p>
+        <div class="card-art art-book" data-mark="3:17"><span>self-publishing</span></div>
+        <p class="kicker">libro · pubblicato</p>
         <h3>3:17</h3>
         <p>"La storia che ti trova quando smetti di cercarla." Un viaggio nella mente, tra memoria, coscienza e libero arbitrio. Pubblicato su Amazon KDP.</p>
         <div class="tags"><span class="tag">Scrittura</span><span class="tag">Amazon KDP</span></div>
         <p class="meta"><a href="https://www.amazon.com/author/filippomarcon" target="_blank" rel="noopener">Pagina autore su Amazon →</a></p>
       </article>
       <article class="card reveal">
+        <div class="card-art art-diario" data-mark="✎"><span>romanzo illustrato</span></div>
         <p class="kicker">libro · in lavorazione</p>
         <h3>Diario di un Content Creator</h3>
         <p>Romanzo illustrato per ragazzi: Max Kennedy, 14 anni, e la sua scalata nel mondo dei content creator. Edizione hardcover in preparazione.</p>
