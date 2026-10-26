@@ -418,13 +418,15 @@ function renderAll(){
   document.getElementById('statHum').textContent=c.relative_humidity_2m+'%';
   document.getElementById('statFeels').textContent=c.apparent_temperature.toFixed(1).replace('.',',')+'°';
 
-  // Hourly: mostra da ora corrente in avanti (nel fallback: tutte le voci di oggi)
+  // Hourly: parte dall'ora corrente e mostra le prossime 14 ore
   var hh='';
-  var nowH=new Date().getHours();
+  var nowFloor=new Date(); nowFloor.setMinutes(0,0,0);
+  var startIdx=-1;
+  for(var s=0;s<DATA.hourly.time.length;s++){ if(new Date(DATA.hourly.time[s])>=nowFloor){ startIdx=s; break; } }
+  if(startIdx<0) startIdx=0; // nessun orario futuro nei dati (es. snapshot vecchio): mostra dall'inizio
   var count=0;
-  for(var i=0;i<DATA.hourly.time.length && count<14;i++){
+  for(var i=startIdx;i<DATA.hourly.time.length && count<14;i++){
     var dt=new Date(DATA.hourly.time[i]);
-    // per dati live mostra solo ore >= adesso di oggi; per fallback mostra tutte
     hh+='<div class="hour"><small>'+String(dt.getHours()).padStart(2,'0')+':00</small><div class="ic">'+codeInfo(DATA.hourly.weather_code[i]).i+'</div><strong>'+Math.round(DATA.hourly.temperature_2m[i])+'°</strong><span>perc. '+Math.round(DATA.hourly.apparent_temperature[i])+'°</span><span>💨 '+Math.round(DATA.hourly.wind_speed_10m[i])+' km/h</span></div>';
     count++;
   }
