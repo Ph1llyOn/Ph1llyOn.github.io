@@ -79,6 +79,11 @@ a{color:var(--teal)}
 .hourly{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
 .hour{scroll-snap-align:start;min-width:86px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 10px;text-align:center;box-shadow:var(--shadow)}
 .hour small{color:var(--muted);font-weight:700} .hour .ic{font-size:22px;margin:6px 0} .hour strong{font-size:16px} .hour span{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+.hour.sun-event{background:var(--sand-soft);border-color:#f3d48a;min-width:76px}
+.hour.sun-event .ic{font-size:26px;margin:8px 0 4px}
+.hour.sun-event strong{font-size:14px}
+.hour.sun-event span{color:#7a4a00;font-weight:700}
+@media(prefers-color-scheme:dark){.hour.sun-event span{color:#ffd88a}}
 .days{display:grid;gap:10px}
 .day{display:grid;grid-template-columns:110px 44px 1fr auto;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:13px 14px;box-shadow:var(--shadow)}
 @media(max-width:560px){.day{grid-template-columns:86px 30px 1fr} .day .extra{display:none}}
@@ -129,7 +134,7 @@ footer{margin-top:24px;color:var(--muted);font-size:12.5px;line-height:1.6;text-
         <span class="pill" id="pillHum">💧 Umidità 63%</span>
         <span class="pill" id="pillRain">☔ Pioggia 0%</span>
         <span class="pill" id="pillUV">☀️ UV 3.0</span>
-        <span class="pill">🌅 Alba 06:39 • Tramonto 17:04</span>
+        <span class="pill" id="pillSun">🌅 Alba 06:39 • Tramonto 17:04</span>
       </div>
     </div>
   </section>
@@ -183,7 +188,7 @@ footer{margin-top:24px;color:var(--muted);font-size:12.5px;line-height:1.6;text-
 
   <section class="section">
     <h2>Prossime ore</h2>
-    <p class="sub">Guarda la percepita, non solo i gradi: è quella che decide felpa e giubbotto. Scorri le ore.</p>
+    <p class="sub">Guarda la percepita, non solo i gradi: è quella che decide felpa e giubbotto. Scorri le ore: nella striscia trovi segnate anche alba e tramonto, e di notte le icone mostrano la luna.</p>
     <div class="hourly" id="hourlyRow"></div>
     <p class="notice" id="hourlyNote">Stamattina alle 07:00 c'erano 6.5° con percepita 3.2° per il vento — da giubbotto. Alle 14:00 sei a 17.4°.</p>
   </section>
@@ -253,10 +258,10 @@ var DATA = FALLBACK;
 var prefOffset = 0; // normale
 var currentMoment = 'now';
 
-function codeInfo(c){
-  if(c===0) return {t:'Sereno',i:'☀️'};
-  if(c===1) return {t:'Prevalentemente sereno',i:'🌤️'};
-  if(c===2) return {t:'Parzialmente nuvoloso',i:'⛅'};
+function codeInfo(c, night){
+  if(c===0) return night?{t:'Sereno',i:'🌙'}:{t:'Sereno',i:'☀️'};
+  if(c===1) return night?{t:'Prevalentemente sereno',i:'🌙'}:{t:'Prevalentemente sereno',i:'🌤️'};
+  if(c===2) return night?{t:'Parzialmente nuvoloso',i:'☁️'}:{t:'Parzialmente nuvoloso',i:'⛅'};
   if(c===3) return {t:'Nuvoloso',i:'☁️'};
   if(c===45||c===48) return {t:'Nebbia',i:'🌫️'};
   if(c>=51&&c<=57) return {t:'Pioviggine',i:'🌦️'};
@@ -265,6 +270,28 @@ function codeInfo(c){
   if(c>=80&&c<=82) return {t:'Rovesci',i:'🌧️'};
   if(c>=95) return {t:'Temporale',i:'⛈️'};
   return {t:'Nuvoloso',i:'☁️'};
+}
+// Giorno o notte per un dato orario: usa is_day di Open-Meteo se c'è, altrimenti alba/tramonto del giorno
+function dayIndexFor(dt){
+  var ds=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+  for(var j=0;j<DATA.daily.time.length;j++){ if(DATA.daily.time[j]===ds) return j; }
+  return -1;
+}
+function isNightHour(idx, dt){
+  if(DATA.hourly.is_day) return DATA.hourly.is_day[idx]===0;
+  var j=dayIndexFor(dt); if(j<0) return dt.getHours()<7||dt.getHours()>=18;
+  var sr=new Date(DATA.daily.sunrise[j]), ss=new Date(DATA.daily.sunset[j]);
+  return dt<sr || dt>=ss;
+}
+// Se alba o tramonto cadono dentro quest'ora, restituisce la scheda-evento da inserire nella striscia
+function sunEventCard(dt){
+  var j=dayIndexFor(dt); if(j<0) return '';
+  var end=new Date(dt.getTime()+3600000);
+  function hm(d){ return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+  var sr=new Date(DATA.daily.sunrise[j]), ss=new Date(DATA.daily.sunset[j]);
+  if(sr>=dt && sr<end) return '<div class="hour sun-event"><small>Alba</small><div class="ic">🌅</div><strong>'+hm(sr)+'</strong><span>Il sole sorge</span></div>';
+  if(ss>=dt && ss<end) return '<div class="hour sun-event"><small>Tramonto</small><div class="ic">🌇</div><strong>'+hm(ss)+'</strong><span>Il sole cala</span></div>';
+  return '';
 }
 function windDir(d){var a=['N','NE','E','SE','S','SO','O','NO'];return a[Math.round(d/45)%8];}
 function windName(d,s){
@@ -413,6 +440,10 @@ function renderAll(){
   document.getElementById('pillHum').textContent='💧 Umidità '+c.relative_humidity_2m+'%';
   document.getElementById('pillRain').textContent='☔ Pioggia '+(d.precipitation_probability_max[0]||0)+'%';
   document.getElementById('pillUV').textContent='☀️ UV '+d.uv_index_max[0];
+  if(d.sunrise && d.sunset){
+    var sr0=new Date(d.sunrise[0]), ss0=new Date(d.sunset[0]);
+    document.getElementById('pillSun').textContent='🌅 Alba '+String(sr0.getHours()).padStart(2,'0')+':'+String(sr0.getMinutes()).padStart(2,'0')+' • Tramonto '+String(ss0.getHours()).padStart(2,'0')+':'+String(ss0.getMinutes()).padStart(2,'0');
+  }
   document.getElementById('statWind').textContent=c.wind_speed_10m+' km/h';
   document.getElementById('statWind2').textContent=windName(c.wind_direction_10m,c.wind_speed_10m)+' • raffiche '+c.wind_gusts_10m+' km/h';
   document.getElementById('statHum').textContent=c.relative_humidity_2m+'%';
@@ -427,7 +458,8 @@ function renderAll(){
   var count=0;
   for(var i=startIdx;i<DATA.hourly.time.length && count<14;i++){
     var dt=new Date(DATA.hourly.time[i]);
-    hh+='<div class="hour"><small>'+String(dt.getHours()).padStart(2,'0')+':00</small><div class="ic">'+codeInfo(DATA.hourly.weather_code[i]).i+'</div><strong>'+Math.round(DATA.hourly.temperature_2m[i])+'°</strong><span>perc. '+Math.round(DATA.hourly.apparent_temperature[i])+'°</span><span>💨 '+Math.round(DATA.hourly.wind_speed_10m[i])+' km/h</span></div>';
+    hh+='<div class="hour"><small>'+String(dt.getHours()).padStart(2,'0')+':00</small><div class="ic">'+codeInfo(DATA.hourly.weather_code[i], isNightHour(i,dt)).i+'</div><strong>'+Math.round(DATA.hourly.temperature_2m[i])+'°</strong><span>perc. '+Math.round(DATA.hourly.apparent_temperature[i])+'°</span><span>💨 '+Math.round(DATA.hourly.wind_speed_10m[i])+' km/h</span></div>';
+    hh+=sunEventCard(dt);
     count++;
   }
   document.getElementById('hourlyRow').innerHTML=hh;
@@ -465,7 +497,7 @@ document.querySelectorAll('[data-pref]').forEach(function(b){
 
 // Refresh live da Open-Meteo (se online) — altrimenti resta lo snapshot
 function tryLive(){
-  var url='https://api.open-meteo.com/v1/forecast?latitude=45.6006&longitude=12.8871&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&timezone=Europe%2FRome&forecast_days=7';
+  var url='https://api.open-meteo.com/v1/forecast?latitude=45.6006&longitude=12.8871&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl,is_day&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,relative_humidity_2m,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&timezone=Europe%2FRome&forecast_days=7';
   fetch(url).then(function(r){return r.json()}).then(function(j){
     if(j && j.current){ DATA=j; document.getElementById('liveLabel').textContent='Live Open-Meteo • aggiornato adesso'; renderAll(); }
   }).catch(function(){ /* resta snapshot */ });
