@@ -156,24 +156,24 @@
     <h1>senza svapo 💨🚫</h1>
     <p class="sub">giorni, voglie, trucchi e soldi risparmiati — tutto segnato qui.</p>
     <div class="counter">
-      <div class="big"><span id="dayNum">9</span><small>° giorno</small></div>
+      <div class="big"><span id="dayNum">1</span><small>° giorno</small></div>
       <div class="label">senza svapare</div>
-      <div class="since">ultima svapata: <b>28 ottobre 2026, ore 18:44</b><br><span id="elapsed"></span></div>
+      <div class="since">ultima svapata: <b>6 novembre 2026, ore 16:03</b><br><span id="elapsed"></span></div>
     </div>
   </header>
 
   <div class="stats">
-    <div class="stat g"><div class="n"><span id="saved">11,40</span><small> €</small></div><div class="t">risparmiati finora (circa)</div></div>
-    <div class="stat o"><div class="n"><span id="pods">9</span></div><div class="t">pod non usati (circa)</div></div>
+    <div class="stat g"><div class="n"><span id="saved">1,35</span><small> €</small></div><div class="t">risparmiati finora (circa)</div></div>
+    <div class="stat o"><div class="n"><span id="liquids">0,1</span></div><div class="t">liquidi non comprati (circa)</div></div>
     <div class="stat r"><div class="n">9<small>/10</small></div><div class="t">voglia più forte (2 nov)</div></div>
-    <div class="stat p"><div class="n"><span id="streak">9</span><small> giorni</small></div><div class="t">di fila, il mio record</div></div>
+    <div class="stat p"><div class="n">9<small> giorni</small></div><div class="t">di fila, il mio record</div></div>
   </div>
 
   <section>
     <h2><span class="dot">●</span> il piano</h2>
     <p class="hint">non smettere del tutto per ora — spendere meno e rimandare le voglie senza senso.</p>
     <div class="plan">
-      <div class="card"><div class="ico">💰</div><h3>spendere meno</h3><p>prima spendevo 6,90&nbsp;€ a settimana di liquido + un pod da 4&nbsp;€ ogni due settimane: circa 462,80&nbsp;€ l'anno. sta funzionando.</p></div>
+      <div class="card"><div class="ico">💰</div><h3>spendere meno</h3><p>prima spendevo 7,50&nbsp;€ a settimana di liquido + un pod da 4&nbsp;€ ogni due settimane: circa 494&nbsp;€ l'anno. sta funzionando.</p></div>
       <div class="card"><div class="ico">⏳</div><h3>rimandare le voglie</h3><p>le voglie senza motivo dietro — tipo innervosismo — le rimando, non le assecondo subito.</p></div>
       <div class="card"><div class="ico">📦</div><h3>scorta solo per i momenti difficili</h3><p>pod e liquido comprati il 6 novembre, solo per quando ci sono problemi a casa, devo tranquillizzarmi o sono innervosito.</p></div>
       <div class="card"><div class="ico">📱</div><h3>juno controlla, io riferisco</h3><p>check-in ogni giorno, e io dico se, quando e quanto ho svapato. ale mi aiuta da lontano.</p></div>
@@ -206,7 +206,7 @@
       <div class="ev"><div class="when">3 nov · giorno 6</div><h3>voglia forte</h3><p>il momento che mi frega è l'attesa del bus dopo scuola, 16:00–16:40. sera stressante: litigio dei genitori, nonna in ospedale.</p></div>
       <div class="ev"><div class="when">4 nov · giorno 7</div><h3>una settimana intera 🎉</h3><p>giornata tranquilla, voglia presente. decido: venerdì compro pod e liquido come scorta.</p><span class="tag">7 giorni</span></div>
       <div class="ev"><div class="when">5 nov · giorno 8</div><h3>giornata tranquilla</h3><p>nessuna voglia riferita, nessun acquisto.</p></div>
-      <div class="ev today"><div class="when">6 nov · giorno 9</div><h3>la scorta è a casa</h3><p>pod e liquido presi dopo le 15:30. voglia un po' nel pomeriggio, ma scrivo a juno prima di usare. il piano nuovo è ufficiale.</p><span class="tag">oggi</span></div>
+      <div class="ev today"><div class="when">6 nov · giorno 9</div><h3>la scorta è a casa — e un tiro alle 16:03</h3><p>pod e liquido presi dopo le 15:30. voglia un po' nel pomeriggio: alle 16:03 faccio un tiro come ricompensa dopo 9 giorni. la striscia si chiude a 9 giorni — è il record, e in 9 giorni ho risparmiato circa 12,20&nbsp;€. si riparte da lì.</p><span class="tag">oggi · record 9 giorni</span></div>
     </div>
   </section>
 
@@ -237,15 +237,15 @@
   </section>
 
   <footer>
-    aggiornato al 6 novembre 2026 · il counter parte dall'ultima svapata (28 ott 2026, 18:44)<br>
+    aggiornato al 6 novembre 2026 · il counter parte dall'ultima svapata (6 nov 2026, 16:03)<br>
     fatto con juno · <a href="https://ph1llyon.github.io/">torna al sito</a>
   </footer>
 
 </div>
 <script>
-  // ultima svapata: 28 ottobre 2026, ore 18:44
-  var LAST = new Date('2026-10-28T18:44:00+01:00');
-  var COST_DAY = 462.80 / 365; // 6,90 €/sett liquido + 4 €/2 sett pod
+  // ultima svapata: 6 novembre 2026, ore 16:03
+  var LAST = new Date('2026-11-06T16:03:00+01:00');
+  var COST_DAY = 494 / 365; // 7,50 €/sett liquido + 4 €/2 sett pod
   function fmt(n){ return n.toFixed(2).replace('.', ','); }
   function tick(){
     var now = new Date();
@@ -254,8 +254,7 @@
     var dayNum = days + 1; // 29 ott = giorno 1
     var hours = Math.floor((ms % 86400000) / 3600000);
     document.getElementById('dayNum').textContent = dayNum;
-    document.getElementById('streak').textContent = dayNum;
-    document.getElementById('pods').textContent = dayNum;
+    document.getElementById('liquids').textContent = (dayNum / 7).toFixed(1).replace('.', ',');
     document.getElementById('saved').textContent = fmt(dayNum * COST_DAY);
     document.getElementById('elapsed').textContent =
       'sono passati ' + days + ' giorni e ' + hours + ' ore dall\'ultima svapata';
