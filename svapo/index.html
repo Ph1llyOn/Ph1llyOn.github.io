@@ -157,6 +157,7 @@
     background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px 12px;
   }
   .vbtn:active { transform: scale(.97); }
+  .vbtn:disabled { opacity: .35; }
   .vbtn .emo { font-size: 30px; }
   .vbtn span { font-weight: 800; font-size: 15px; }
   .vbtn small { font-size: 12px; opacity: .75; }
@@ -200,6 +201,7 @@
       <button class="vbtn vape" onclick="markVape()"><span class="emo">🚬</span><span>ho svapato</span><small>ultimo: <b id="lastVapeBtn">6 nov, 16:03</b></small></button>
       <button class="vbtn liq" onclick="markBuy('liquido')"><span class="emo">🧴</span><span>ho comprato il liquido</span><small>7,50 € · ultimo: <b id="lastLiquidLabel">6 nov</b></small></button>
       <button class="vbtn pod" onclick="markBuy('pod')"><span class="emo">🔋</span><span>ho comprato il pod</span><small>4 € · ultimo: <b id="lastPodLabel">6 nov</b></small></button>
+      <button class="vbtn" id="undoBtn" onclick="undoLast()" disabled><span class="emo">↩️</span><span>annulla ultimo</span><small id="undoLabel">niente da annullare</small></button>
     </div>
     <div class="spent">spesi finora: <b><span id="spentTotal">11,50</span> €</b> <button class="mini" onclick="exportBackup()">esporta backup</button> <button class="mini" onclick="document.getElementById('importFile').click()">importa backup</button> <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importBackup(this)"> <button class="reset" onclick="resetData()">azzera dati</button></div>
     <ul class="moves" id="movements"></ul>
@@ -337,6 +339,18 @@
   function localISODate(d){
     return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   }
+  var prevState = null, prevLabel = '';
+  function snapshot(label){
+    prevState = JSON.parse(JSON.stringify(state));
+    prevLabel = label;
+  }
+  function undoLast(){
+    if (!prevState) return;
+    state = prevState;
+    prevState = null; prevLabel = '';
+    saveState();
+    render();
+  }
   function render(){
     var now = new Date();
     var lastVape = new Date(state.lastVape);
@@ -363,6 +377,9 @@
       var amt = e.a ? ' · ' + fmt(e.a) + ' €' : '';
       return '<li><span>' + label + '</span><span>' + fmtDate(e.d) + amt + '</span></li>';
     }).join('') || '<li>ancora niente segnato</li>';
+    var ub = document.getElementById('undoBtn');
+    ub.disabled = !prevState;
+    document.getElementById('undoLabel').textContent = prevState ? ('ultimo: ' + prevLabel) : 'niente da annullare';
   }
   function canWrite(){ return !!user; }
   var anonTried = false;
@@ -374,6 +391,7 @@
     if (!canWrite()) { alert('Connessione a firebase in corso, riprova tra un attimo.'); return; }
     if (!confirm('Segno che hai svapato adesso? Il counter dei giorni riparte da 1.')) return;
     var now = new Date();
+    snapshot('svapata');
     state.lastVape = now.toISOString();
     state.log.unshift({t:'svapo', d: now.toISOString(), a:0});
     saveState();
@@ -383,6 +401,7 @@
     if (!canWrite()) { alert('Connessione a firebase in corso, riprova tra un attimo.'); return; }
     var price = kind === 'liquido' ? LIQ_PRICE : POD_PRICE;
     var today = localISODate(new Date());
+    snapshot(kind === 'liquido' ? 'liquido · 7,50 €' : 'pod · 4,00 €');
     state.spent = Math.round((state.spent + price) * 100) / 100;
     if (kind === 'liquido') state.lastLiquid = today; else state.lastPod = today;
     state.log.unshift({t:kind, d: today, a: price});
@@ -392,6 +411,7 @@
   function resetData(){
     if (!canWrite()) { alert('Connessione a firebase in corso, riprova tra un attimo.'); return; }
     if (!confirm('Azzero tutti i dati su firebase e torno ai valori del 6 novembre?')) return;
+    snapshot('azzera dati');
     state = JSON.parse(JSON.stringify(DEFAULTS));
     saveState();
     render();
@@ -434,6 +454,7 @@
       try {
         var d = JSON.parse(r.result);
         if (!d || typeof d.lastVape !== 'string' || typeof d.spent !== 'number' || !Array.isArray(d.log)) throw new Error('formato non valido');
+        snapshot('import backup');
         state.lastVape = d.lastVape;
         state.lastLiquid = d.lastLiquid || state.lastLiquid;
         state.lastPod = d.lastPod || state.lastPod;
