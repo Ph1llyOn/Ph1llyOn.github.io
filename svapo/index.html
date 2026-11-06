@@ -163,8 +163,8 @@
   </header>
 
   <div class="stats">
-    <div class="stat g"><div class="n"><span id="saved">1,35</span><small> €</small></div><div class="t">risparmiati finora (circa)</div></div>
-    <div class="stat o"><div class="n"><span id="liquids">0,1</span></div><div class="t">liquidi non comprati (circa)</div></div>
+    <div class="stat g"><div class="n"><span id="saved">13,53</span><small> €</small></div><div class="t">risparmiati finora (circa)</div></div>
+    <div class="stat o"><div class="n"><span id="liquids">1,4</span></div><div class="t">liquidi non comprati (circa)</div></div>
     <div class="stat r"><div class="n">9<small>/10</small></div><div class="t">voglia più forte (2 nov)</div></div>
     <div class="stat p"><div class="n">9<small> giorni</small></div><div class="t">di fila, il mio record</div></div>
   </div>
@@ -206,7 +206,7 @@
       <div class="ev"><div class="when">3 nov · giorno 6</div><h3>voglia forte</h3><p>il momento che mi frega è l'attesa del bus dopo scuola, 16:00–16:40. sera stressante: litigio dei genitori, nonna in ospedale.</p></div>
       <div class="ev"><div class="when">4 nov · giorno 7</div><h3>una settimana intera 🎉</h3><p>giornata tranquilla, voglia presente. decido: venerdì compro pod e liquido come scorta.</p><span class="tag">7 giorni</span></div>
       <div class="ev"><div class="when">5 nov · giorno 8</div><h3>giornata tranquilla</h3><p>nessuna voglia riferita, nessun acquisto.</p></div>
-      <div class="ev today"><div class="when">6 nov · giorno 9</div><h3>la scorta è a casa — e un tiro alle 16:03</h3><p>pod e liquido presi dopo le 15:30. voglia un po' nel pomeriggio: alle 16:03 faccio un tiro come ricompensa dopo 9 giorni. la striscia si chiude a 9 giorni — è il record, e in 9 giorni ho risparmiato circa 12,20&nbsp;€. si riparte da lì.</p><span class="tag">oggi · record 9 giorni</span></div>
+      <div class="ev today"><div class="when">6 nov · giorno 9</div><h3>la scorta è a casa — e un tiro alle 16:03</h3><p>pod e liquido presi dopo le 15:30 (11,50&nbsp;€: pod 4&nbsp;€ + liquido 7,50&nbsp;€). voglia un po' nel pomeriggio: alle 16:03 faccio un tiro come ricompensa dopo 9 giorni. la striscia si chiude a 9 giorni — è il record, e in 9 giorni ho risparmiato circa 12,20&nbsp;€. si riparte da lì.</p><span class="tag">oggi · record 9 giorni</span></div>
     </div>
   </section>
 
@@ -246,6 +246,7 @@
   // ultima svapata: 6 novembre 2026, ore 16:03
   var LAST = new Date('2026-11-06T16:03:00+01:00');
   var COST_DAY = 494 / 365; // 7,50 €/sett liquido + 4 €/2 sett pod
+  var DAYS_BEFORE = 9; // giorni della striscia precedente (29 ott – 6 nov): i soldi risparmiati non si azzerano
   function fmt(n){ return n.toFixed(2).replace('.', ','); }
   function tick(){
     var now = new Date();
@@ -254,8 +255,8 @@
     var dayNum = days + 1; // 29 ott = giorno 1
     var hours = Math.floor((ms % 86400000) / 3600000);
     document.getElementById('dayNum').textContent = dayNum;
-    document.getElementById('liquids').textContent = (dayNum / 7).toFixed(1).replace('.', ',');
-    document.getElementById('saved').textContent = fmt(dayNum * COST_DAY);
+    document.getElementById('liquids').textContent = ((DAYS_BEFORE + dayNum) / 7).toFixed(1).replace('.', ',');
+    document.getElementById('saved').textContent = fmt((DAYS_BEFORE + dayNum) * COST_DAY);
     document.getElementById('elapsed').textContent =
       'sono passati ' + days + ' giorni e ' + hours + ' ore dall\'ultima svapata';
   }
