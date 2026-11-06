@@ -197,7 +197,7 @@
     <div class="stat g"><div class="n"><span id="saved">0,68</span><small> €</small></div><div class="t">risparmiati finora (circa)</div><div class="d" id="savedDetail">12,18 € non spesi − 11,50 € di scorta</div></div>
     <div class="stat o"><div class="n"><span id="liqBought">1</span></div><div class="t">liquidi acquistati</div><div class="d" id="liqBoughtDetail">ultimo: 6 nov</div></div>
     <div class="stat p"><div class="n"><span id="podBought">1</span></div><div class="t">pod acquistati</div><div class="d" id="podBoughtDetail">ultimo: 6 nov</div></div>
-    <div class="stat p"><div class="n">9<small> giorni</small></div><div class="t">di fila, il mio record</div></div>
+    <div class="stat p"><div class="n"><span id="recordDays">9</span><small> giorni</small></div><div class="t">di fila, il mio record</div></div>
   </div>
 
   <section>
@@ -226,7 +226,6 @@
       <button class="vbtn liq" style="width:100%" onclick="saveDay()">salva oggi</button>
       <p class="hint" id="daySaved">ancora da segnare oggi</p>
     </div>
-    <ul class="moves" id="dayHistory"></ul>
   </section>
 
   <section>
@@ -242,32 +241,16 @@
 
   <section>
     <h2><span class="dot">●</span> le voglie</h2>
-    <p class="hint">come sono andate, giorno per giorno. solo quello che ho riferito davvero.</p>
-    <div class="crave">
-      <div class="row"><span class="d">29 ott</span><div class="bar b-forte"><i></i></div><span class="v">molta voglia</span></div>
-      <div class="row"><span class="d">2 nov</span><div class="bar b-max"><i></i></div><span class="v">9 su 10 🔥</span></div>
-      <div class="row"><span class="d">3 nov</span><div class="bar b-forte"><i></i></div><span class="v">forte</span></div>
-      <div class="row"><span class="d">4 nov</span><div class="bar b-medio"><i></i></div><span class="v">presente</span></div>
-      <div class="row"><span class="d">5 nov</span><div class="bar b-none"><i></i></div><span class="v">nessuna 🙂</span></div>
-      <div class="row"><span class="d">6 nov</span><div class="bar b-poco"><i></i></div><span class="v">un po'</span></div>
-    </div>
+    <p class="hint">come sono andate, giorno per giorno. si aggiorna da quello che segni in "oggi".</p>
+    <p class="hint" id="cravingPeak">ancora niente segnato</p>
+    <ul class="moves" id="cravingsList"></ul>
   </section>
 
   <section>
     <h2><span class="dot">●</span> la timeline</h2>
-    <p class="hint">dal giorno 1 a oggi.</p>
-    <div class="tl">
-      <div class="ev"><div class="when">28 ott · giorno 0</div><h3>ultima svapata</h3><p>ore 18:44. finiti liquido e pod: non ho più niente da svapare.</p></div>
-      <div class="ev"><div class="when">29 ott · giorno 1</div><h3>primo giorno intero senza niente</h3><p>di notte butto boccetta e pod finiti. resta solo la Wenax da annusare.</p></div>
-      <div class="ev"><div class="when">30 ott · giorno 2</div><h3>secondo giorno fatto ✓</h3><p>confermato: “secondo giorno senza svapo fatto”.</p></div>
-      <div class="ev"><div class="when">31 ott · giorno 3</div><h3>“per ora chill”</h3><p>la sera c'è una festicciola di halloween — momento a rischio, superato.</p></div>
-      <div class="ev"><div class="when">1 nov · giorno 4</div><h3>giornata impegnata, bene</h3><p>al momento bene, la giornata passa senza pensarci troppo.</p></div>
-      <div class="ev"><div class="when">2 nov · giorno 5</div><h3>voglia 9/10 la sera</h3><p>mi mancano il vuoto, il nervosismo, il gesto di inspirare e il colpo in gola. patto: 10 minuti + scrivo a juno prima di comprare. caramelle come sostituto.</p><span class="tag warn">momento più duro</span></div>
-      <div class="ev"><div class="when">3 nov · giorno 6</div><h3>voglia forte</h3><p>il momento che mi frega è l'attesa del bus dopo scuola, 16:00–16:40. sera stressante: litigio dei genitori, nonna in ospedale.</p></div>
-      <div class="ev"><div class="when">4 nov · giorno 7</div><h3>una settimana intera 🎉</h3><p>giornata tranquilla, voglia presente. decido: venerdì compro pod e liquido come scorta.</p><span class="tag">7 giorni</span></div>
-      <div class="ev"><div class="when">5 nov · giorno 8</div><h3>giornata tranquilla</h3><p>nessuna voglia riferita, nessun acquisto.</p></div>
-      <div class="ev today"><div class="when">6 nov · giorno 9</div><h3>la scorta è a casa — e un tiro alle 16:03</h3><p>pod e liquido presi dopo le 15:30 (11,50&nbsp;€: pod 4&nbsp;€ + liquido 7,50&nbsp;€). voglia un po' nel pomeriggio: alle 16:03 faccio un tiro come ricompensa dopo 9 giorni. la striscia si chiude a 9 giorni — è il record, e in 9 giorni ho risparmiato circa 12,20&nbsp;€. si riparte da lì.</p><span class="tag">oggi · record 9 giorni</span></div>
-    </div>
+    <p class="hint">dal giorno dell'ultima svapata a oggi.</p>
+    <ul class="moves" id="timelineList"></ul>
+    <p class="hint">striscia precedente: 9 giorni (29 ott – 6 nov).</p>
   </section>
 
   <section>
@@ -333,7 +316,8 @@
       {t:'pod', d:'2026-11-06', a:4.00},
       {t:'liquido', d:'2026-11-06', a:7.50}
     ],
-    days: {}
+    days: { '2026-11-02': { voglia: 9, svapato: false } },
+    record: 9
   };
   var state = JSON.parse(JSON.stringify(DEFAULTS));
   var user = null, listening = false;
@@ -447,13 +431,36 @@
     }
     var tv = todayEntry && typeof todayEntry.voglia === 'number' ? todayEntry.voglia : '—';
     document.getElementById('daySaved').textContent = todayEntry ? ('salvato: voglia ' + tv + '/10 · ' + (todayEntry.svapato === true ? 'hai svapato' : todayEntry.svapato === false ? 'non hai svapato' : '—')) : 'ancora da segnare oggi';
-    var dayKeys = Object.keys(state.days).sort().reverse().slice(0, 7);
-    document.getElementById('dayHistory').innerHTML = dayKeys.map(function(k){
+    // le voglie: dai report giornalieri in "oggi"
+    var cKeys = Object.keys(state.days).filter(function(k){ return typeof state.days[k].voglia === 'number'; }).sort().reverse();
+    var peak = null, peakKey = null;
+    cKeys.forEach(function(k){ if (peak === null || state.days[k].voglia > peak) { peak = state.days[k].voglia; peakKey = k; } });
+    document.getElementById('cravingPeak').textContent = peak === null ? 'ancora niente segnato' : 'la più forte finora: ' + peak + '/10 (' + fmtDate(peakKey) + ')';
+    document.getElementById('cravingsList').innerHTML = cKeys.map(function(k){
       var d = state.days[k];
-      var v = typeof d.voglia === 'number' ? d.voglia : '—';
       var s = d.svapato === true ? 'svapato' : d.svapato === false ? 'non svapato' : '—';
-      return '<li><span>' + fmtDate(k) + '</span><span>voglia ' + v + '/10 · ' + s + '</span></li>';
+      return '<li><span>' + fmtDate(k) + '</span><span>voglia ' + d.voglia + '/10 · ' + s + '</span></li>';
     }).join('') || '<li>ancora niente segnato</li>';
+    // la timeline: giorni dalla lastVape, con voglia e svapato dai report
+    var lvKey = localISODate(new Date(state.lastVape));
+    var lvDay = new Date(lvKey + 'T12:00:00');
+    var todayDay = new Date(localISODate(new Date()) + 'T12:00:00');
+    var tRows = [];
+    for (var td = new Date(lvDay); td <= todayDay; td.setDate(td.getDate() + 1)) {
+      var k2 = localISODate(td);
+      var n2 = Math.round((td - lvDay) / 86400000);
+      var e2 = state.days[k2];
+      var vaped = state.log.some(function(x){ return x.t === 'svapo' && localISODate(new Date(x.d)) === k2; });
+      var sv = vaped || k2 === lvKey || (e2 && e2.svapato === true);
+      var vg = e2 && typeof e2.voglia === 'number' ? e2.voglia + '/10' : '—';
+      tRows.unshift('<li><span>giorno ' + n2 + ' · ' + fmtDate(k2) + '</span><span>voglia ' + vg + ' · ' + (sv ? 'svapato' : 'non svapato') + '</span></li>');
+    }
+    document.getElementById('timelineList').innerHTML = tRows.join('') || '<li>ancora niente segnato</li>';
+    // record: il massimo mai raggiunto, si aggiorna da solo
+    var streakDays = Math.round((todayDay - lvDay) / 86400000);
+    if (typeof state.record !== 'number') state.record = 9;
+    if (streakDays > state.record) { state.record = streakDays; saveState(); }
+    document.getElementById('recordDays').textContent = state.record;
   }
   function canWrite(){ return !!user; }
   var anonTried = false;
@@ -506,6 +513,7 @@
         state = v;
         if (!Array.isArray(state.log)) state.log = state.log ? Object.keys(state.log).sort().map(function(k){ return state.log[k]; }) : [];
         if (!state.days) state.days = {};
+        if (typeof state.record !== 'number') state.record = 9;
         render();
       }, function(e){ alert('Non riesco a leggere i dati: ' + e.message); });
     }
