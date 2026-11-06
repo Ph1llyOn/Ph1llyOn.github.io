@@ -164,7 +164,7 @@
   .vbtn.liq { background: linear-gradient(135deg, rgba(124,58,237,.35), rgba(217,70,239,.25)); border-color: rgba(217,70,239,.5); }
   .vbtn.pod { background: linear-gradient(135deg, rgba(16,185,129,.3), rgba(163,230,53,.2)); border-color: rgba(163,230,53,.45); }
   .spent { margin-top: 14px; font-size: 14px; opacity: .9; }
-  .spent .reset { margin-left: 10px; font: inherit; font-size: 12px; background: none; border: none; color: #f0abfc; text-decoration: underline; cursor: pointer; padding: 0; }
+  .spent .mini, .spent .reset { margin-left: 10px; font: inherit; font-size: 12px; background: none; border: none; color: #f0abfc; text-decoration: underline; cursor: pointer; padding: 0; }
   .moves { list-style: none; margin-top: 10px; display: grid; gap: 6px; font-size: 14px; }
   .moves li { display: flex; justify-content: space-between; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 9px 13px; }
 </style>
@@ -198,7 +198,7 @@
       <button class="vbtn liq" onclick="markBuy('liquido')"><span class="emo">🧴</span><span>ho comprato il liquido</span><small>7,50 € · ultimo: <b id="lastLiquidLabel">6 nov</b></small></button>
       <button class="vbtn pod" onclick="markBuy('pod')"><span class="emo">🔋</span><span>ho comprato il pod</span><small>4 € · ultimo: <b id="lastPodLabel">6 nov</b></small></button>
     </div>
-    <div class="spent">spesi finora: <b><span id="spentTotal">11,50</span> €</b> <button class="reset" onclick="resetData()">azzera dati</button></div>
+    <div class="spent">spesi finora: <b><span id="spentTotal">11,50</span> €</b> <button class="mini" onclick="exportBackup()">esporta backup</button> <button class="mini" onclick="document.getElementById('importFile').click()">importa backup</button> <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importBackup(this)"> <button class="reset" onclick="resetData()">azzera dati</button></div>
     <ul class="moves" id="movements"></ul>
   </section>
 
@@ -353,6 +353,39 @@
     if (!confirm('Azzero tutti i dati salvati su questo browser e torno ai valori del 6 novembre?')) return;
     Object.keys(localStorage).filter(function(k){ return k.indexOf('svapo_') === 0; }).forEach(function(k){ localStorage.removeItem(k); });
     location.reload();
+  }
+  function exportBackup(){
+    var blob = new Blob([JSON.stringify(state, null, 2)], {type: 'application/json'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'svapo-backup-' + localISODate(new Date()) + '.json';
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  }
+  function importBackup(input){
+    var f = input.files && input.files[0];
+    if (!f) return;
+    var r = new FileReader();
+    r.onload = function(){
+      try {
+        var d = JSON.parse(r.result);
+        if (!d || typeof d.lastVape !== 'string' || typeof d.spent !== 'number' || !Array.isArray(d.log)) throw new Error('formato non valido');
+        state.lastVape = d.lastVape;
+        state.lastLiquid = d.lastLiquid || state.lastLiquid;
+        state.lastPod = d.lastPod || state.lastPod;
+        state.spent = d.spent;
+        state.log = d.log;
+        save('svapo_lastVape', state.lastVape);
+        save('svapo_lastLiquid', state.lastLiquid);
+        save('svapo_lastPod', state.lastPod);
+        save('svapo_spent', state.spent);
+        save('svapo_log', state.log);
+        render();
+        alert('Backup importato');
+      } catch(e){ alert('File non valido: ' + e.message); }
+      input.value = '';
+    };
+    r.readAsText(f);
   }
   render();
   setInterval(render, 60000);
