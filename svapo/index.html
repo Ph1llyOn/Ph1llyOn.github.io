@@ -188,8 +188,8 @@
   </header>
 
   <div class="stats">
-    <div class="stat g"><div class="n"><span id="saved">0,68</span><small> €</small></div><div class="t">risparmiati finora (circa)</div><div class="d" id="savedDetail">lordi 12,18 € · spesi 11,50 €</div></div>
-    <div class="stat o"><div class="n"><span id="liquids">1,3</span></div><div class="t">liquidi non comprati (circa)</div></div>
+    <div class="stat g"><div class="n"><span id="saved">12,18</span><small> €</small></div><div class="t">non spesi da quando hai iniziato (29 ott)</div><div class="d" id="savedDetail">11,50 € spesi per la scorta · netti 0,68 € in tasca</div></div>
+    <div class="stat o"><div class="n"><span id="liquids">1</span></div><div class="t">boccette di liquido non comprate</div><div class="d" id="liquidsDetail">la prossima l'avresti comprata tra 5 giorni</div></div>
     <div class="stat r"><div class="n">9<small>/10</small></div><div class="t">voglia più forte (2 nov)</div></div>
     <div class="stat p"><div class="n">9<small> giorni</small></div><div class="t">di fila, il mio record</div></div>
   </div>
@@ -372,9 +372,12 @@
     var gross = totalDays * COST_DAY;
     var net = gross - state.spent;
     document.getElementById('dayNum').textContent = dayNum;
-    document.getElementById('liquids').textContent = (totalDays / 7).toFixed(1).replace('.', ',');
-    document.getElementById('saved').textContent = fmt(net);
-    document.getElementById('savedDetail').textContent = 'lordi ' + fmt(gross) + ' € · spesi ' + fmt(state.spent) + ' €';
+    var bottles = Math.floor(totalDays / 7);
+    var nextBottleIn = (bottles + 1) * 7 - totalDays;
+    document.getElementById('liquids').textContent = bottles;
+    document.getElementById('liquidsDetail').textContent = nextBottleIn === 1 ? "la prossima l'avresti comprata domani" : "la prossima l'avresti comprata tra " + nextBottleIn + " giorni";
+    document.getElementById('saved').textContent = fmt(gross);
+    document.getElementById('savedDetail').textContent = fmt(state.spent) + ' € spesi per la scorta · netti ' + fmt(net) + ' € in tasca';
     document.getElementById('lastVapeLabel').textContent = fmtDate(state.lastVape);
     document.getElementById('lastVapeBtn').textContent = fmtDate(state.lastVape);
     document.getElementById('elapsed').textContent =
