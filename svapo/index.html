@@ -300,7 +300,6 @@
   firebase.initializeApp(firebaseConfig);
   var dbRef = firebase.database().ref('svapo');
   var auth = firebase.auth();
-  var provider = new firebase.auth.GoogleAuthProvider();
   var DEFAULTS = {
     lastVape: '2026-11-06T16:03:00+01:00',
     lastLiquid: '2026-11-06',
@@ -365,24 +364,14 @@
       return '<li><span>' + label + '</span><span>' + fmtDate(e.d) + amt + '</span></li>';
     }).join('') || '<li>ancora niente segnato</li>';
   }
-  function canWrite(){ return user && user.email === 'filippomarcon444@gmail.com'; }
-  function signIn(){ auth.signInWithRedirect(provider).catch(function(e){ alert('Accesso non riuscito: ' + e.message); }); }
-  function signOut(){ auth.signOut(); }
-  auth.getRedirectResult().catch(function(e){ alert('Accesso non riuscito: ' + e.message); });
+  function canWrite(){ return !!user; }
+  var anonTried = false;
   function updateAuthUI(){
     var el = document.getElementById('authBox');
-    if (user) {
-      if (user.email === 'filippomarcon444@gmail.com') {
-        el.innerHTML = 'connesso come <b>' + user.email + '</b> · dati salvati su firebase, uguali ovunque <button class="mini" onclick="signOut()">esci</button>';
-      } else {
-        el.innerHTML = 'sei entrato con <b>' + user.email + '</b>, ma i dati sono collegati a <b>filippomarcon444@gmail.com</b> <button class="mini" onclick="signOut()">esci e rientra</button>';
-      }
-    } else {
-      el.innerHTML = '<button class="vbtn liq" style="width:100%" onclick="signIn()"><span class="emo">🔑</span><span>accedi con google</span><small>serve per salvare i dati su firebase</small></button>';
-    }
+    el.innerHTML = user ? 'dati salvati su firebase, uguali su tutti i dispositivi' : 'connessione a firebase in corso…';
   }
   function markVape(){
-    if (!canWrite()) { if (!user) signIn(); else alert('Sei entrato con ' + user.email + ': i dati sono collegati a filippomarcon444@gmail.com, esci e rientra con quell\'account.'); return; }
+    if (!canWrite()) { alert('Connessione a firebase in corso, riprova tra un attimo.'); return; }
     if (!confirm('Segno che hai svapato adesso? Il counter dei giorni riparte da 1.')) return;
     var now = new Date();
     state.lastVape = now.toISOString();
@@ -391,7 +380,7 @@
     render();
   }
   function markBuy(kind){
-    if (!canWrite()) { if (!user) signIn(); else alert('Sei entrato con ' + user.email + ': i dati sono collegati a filippomarcon444@gmail.com, esci e rientra con quell\'account.'); return; }
+    if (!canWrite()) { alert('Connessione a firebase in corso, riprova tra un attimo.'); return; }
     var price = kind === 'liquido' ? LIQ_PRICE : POD_PRICE;
     var today = localISODate(new Date());
     state.spent = Math.round((state.spent + price) * 100) / 100;
@@ -401,7 +390,7 @@
     render();
   }
   function resetData(){
-    if (!canWrite()) { if (!user) signIn(); else alert('Sei entrato con ' + user.email + ': i dati sono collegati a filippomarcon444@gmail.com, esci e rientra con quell\'account.'); return; }
+    if (!canWrite()) { alert('Connessione a firebase in corso, riprova tra un attimo.'); return; }
     if (!confirm('Azzero tutti i dati su firebase e torno ai valori del 6 novembre?')) return;
     state = JSON.parse(JSON.stringify(DEFAULTS));
     saveState();
@@ -410,7 +399,11 @@
   auth.onAuthStateChanged(function(u){
     user = u;
     updateAuthUI();
-    if (u && !listening) {
+    if (!u) {
+      if (!anonTried) { anonTried = true; auth.signInAnonymously().catch(function(e){ alert('Connessione a firebase non riuscita: ' + e.message); }); }
+      return;
+    }
+    if (!listening) {
       listening = true;
       dbRef.on('value', function(snap){
         var v = snap.val();
@@ -424,7 +417,6 @@
         render();
       }, function(e){ alert('Non riesco a leggere i dati: ' + e.message); });
     }
-    if (!u) { state = JSON.parse(JSON.stringify(DEFAULTS)); render(); }
   });
   function exportBackup(){
     var blob = new Blob([JSON.stringify(state, null, 2)], {type: 'application/json'});
