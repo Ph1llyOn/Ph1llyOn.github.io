@@ -248,9 +248,8 @@
 
   <section>
     <h2><span class="dot">●</span> la timeline</h2>
-    <p class="hint">dal giorno dell'ultima svapata a oggi.</p>
+    <p class="hint">strisce senza svapare e giorni in cui ho svapato — tutto in automatico, dai bottoni e dai report.</p>
     <ul class="moves" id="timelineList"></ul>
-    <p class="hint">striscia precedente: 9 giorni (29 ott – 6 nov).</p>
   </section>
 
   <section>
@@ -308,15 +307,18 @@
   var dbRef = firebase.database().ref('svapo');
   var auth = firebase.auth();
   var DEFAULTS = {
-    lastVape: '2026-11-06T16:03:00+01:00',
+    lastVape: '2026-11-06T19:53:11.816Z',
     lastLiquid: '2026-11-06',
     lastPod: '2026-11-06',
     spent: 11.50,
     log: [
+      {t:'svapo', d:'2026-11-06T19:53:11.816Z', a:0},
+      {t:'svapo', d:'2026-11-06T16:03:00+01:00', a:0},
       {t:'pod', d:'2026-11-06', a:4.00},
       {t:'liquido', d:'2026-11-06', a:7.50}
     ],
-    days: { '2026-11-02': { voglia: 9, svapato: false } },
+    days: { '2026-11-02': { voglia: 9, svapato: false }, '2026-11-06': { voglia: 7, svapato: true } },
+    streaks: [ { start: '2026-10-29', end: '2026-11-06', days: 9 } ],
     record: 9
   };
   var state = JSON.parse(JSON.stringify(DEFAULTS));
@@ -441,21 +443,44 @@
       var s = d.svapato === true ? 'svapato' : d.svapato === false ? 'non svapato' : '—';
       return '<li><span>' + fmtDate(k) + '</span><span>voglia ' + d.voglia + '/10 · ' + s + '</span></li>';
     }).join('') || '<li>ancora niente segnato</li>';
-    // la timeline: giorni dalla lastVape, con voglia e svapato dai report
+    // la timeline: strisce e svapate, tutto in automatico
     var lvKey = localISODate(new Date(state.lastVape));
     var lvDay = new Date(lvKey + 'T12:00:00');
-    var todayDay = new Date(localISODate(new Date()) + 'T12:00:00');
-    var tRows = [];
-    for (var td = new Date(lvDay); td <= todayDay; td.setDate(td.getDate() + 1)) {
-      var k2 = localISODate(td);
-      var n2 = Math.round((td - lvDay) / 86400000);
-      var e2 = state.days[k2];
-      var vaped = state.log.some(function(x){ return x.t === 'svapo' && localISODate(new Date(x.d)) === k2; });
-      var sv = vaped || k2 === lvKey || (e2 && e2.svapato === true);
-      var vg = e2 && typeof e2.voglia === 'number' ? e2.voglia + '/10' : '—';
-      tRows.unshift('<li><span>giorno ' + n2 + ' · ' + fmtDate(k2) + '</span><span>voglia ' + vg + ' · ' + (sv ? 'svapato' : 'non svapato') + '</span></li>');
+    var todayDay = new Date(todayKey + 'T12:00:00');
+    if (!Array.isArray(state.streaks)) state.streaks = [];
+    function maxVogliaText(a, b){
+      var best = null, bestKey = null;
+      Object.keys(state.days || {}).forEach(function(k){
+        var d = state.days[k];
+        if (k >= a && k <= b && typeof d.voglia === 'number' && (best === null || d.voglia > best)) { best = d.voglia; bestKey = k; }
+      });
+      return best === null ? '' : ' · voglia max ' + best + '/10 (' + fmtDate(bestKey) + ')';
     }
-    document.getElementById('timelineList').innerHTML = tRows.join('') || '<li>ancora niente segnato</li>';
+    function fmtTime(iso){ return new Date(iso).toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'}); }
+    var rows = [];
+    var curDays = Math.round((todayDay - lvDay) / 86400000);
+    if (curDays >= 1) {
+      var curStart = new Date(lvDay); curStart.setDate(curStart.getDate() + 1);
+      var curStartKey = localISODate(curStart);
+      rows.push({ date: todayKey, sort: 1, html: '<li><span>' + fmtDate(curStartKey) + ' – oggi</span><span>' + curDays + (curDays === 1 ? ' giorno' : ' giorni') + ' senza svapare' + maxVogliaText(curStartKey, todayKey) + '</span></li>' });
+    }
+    state.streaks.forEach(function(s){
+      rows.push({ date: s.end, sort: 0, html: '<li><span>' + fmtDate(s.start) + ' – ' + fmtDate(s.end) + '</span><span>' + s.days + ' giorni senza svapare' + (s.days === state.record ? ' · record 🏆' : '') + maxVogliaText(s.start, s.end) + '</span></li>' });
+    });
+    var vapeDays = {};
+    state.log.forEach(function(e){
+      if (e.t !== 'svapo') return;
+      var k = localISODate(new Date(e.d));
+      (vapeDays[k] = vapeDays[k] || []).push(e.d);
+    });
+    Object.keys(vapeDays).sort().forEach(function(k){
+      var times = vapeDays[k].map(fmtTime).sort();
+      var entry = (state.days || {})[k];
+      var vg = entry && typeof entry.voglia === 'number' ? ' · voglia ' + entry.voglia + '/10' : '';
+      rows.push({ date: k, sort: 2, html: '<li><span>' + fmtDate(k) + '</span><span>' + times.length + (times.length === 1 ? ' svapata' : ' svapate') + ' · ' + times.join(', ') + vg + '</span></li>' });
+    });
+    rows.sort(function(a, b){ return a.date < b.date ? 1 : a.date > b.date ? -1 : b.sort - a.sort; });
+    document.getElementById('timelineList').innerHTML = rows.map(function(r){ return r.html; }).join('') || '<li>ancora niente segnato</li>';
     // record: il massimo mai raggiunto, si aggiorna da solo
     var streakDays = Math.round((todayDay - lvDay) / 86400000);
     if (typeof state.record !== 'number') state.record = 9;
@@ -472,6 +497,17 @@
     if (!canWrite()) { alert('Connessione a firebase in corso, riprova tra un attimo.'); return; }
     if (!confirm('Segno che hai svapato adesso? Il counter dei giorni riparte da 1.')) return;
     var now = new Date();
+    // chiudi la striscia che finisce qui: dal giorno dopo l'ultima svapata a oggi
+    var prevKey = localISODate(new Date(state.lastVape));
+    var prevDay = new Date(prevKey + 'T12:00:00');
+    var nowKey = localISODate(now);
+    var nowDay = new Date(nowKey + 'T12:00:00');
+    var endedDays = Math.round((nowDay - prevDay) / 86400000);
+    if (endedDays >= 1) {
+      if (!Array.isArray(state.streaks)) state.streaks = [];
+      var sStart = new Date(prevDay); sStart.setDate(sStart.getDate() + 1);
+      state.streaks.push({ start: localISODate(sStart), end: nowKey, days: endedDays });
+    }
     state.lastVape = now.toISOString();
     state.log.unshift({t:'svapo', d: now.toISOString(), a:0});
     saveState();
@@ -514,6 +550,7 @@
         if (!Array.isArray(state.log)) state.log = state.log ? Object.keys(state.log).sort().map(function(k){ return state.log[k]; }) : [];
         if (!state.days) state.days = {};
         if (typeof state.record !== 'number') state.record = 9;
+        if (!Array.isArray(state.streaks)) state.streaks = [];
         render();
       }, function(e){ alert('Non riesco a leggere i dati: ' + e.message); });
     }
@@ -539,6 +576,9 @@
         state.lastPod = d.lastPod || state.lastPod;
         state.spent = d.spent;
         state.log = d.log;
+        if (d.days) state.days = d.days;
+        if (Array.isArray(d.streaks)) state.streaks = d.streaks;
+        if (typeof d.record === 'number') state.record = d.record;
         if (user) { dbRef.set(state); } else {
           try {
             localStorage.setItem('svapo_lastVape', JSON.stringify(state.lastVape));
