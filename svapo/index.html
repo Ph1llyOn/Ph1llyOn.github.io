@@ -169,6 +169,12 @@
   .moves li { display: flex; justify-content: space-between; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 9px 13px; }
   .del { background: #ef4444; color: #fff; border: none; border-radius: 50%; width: 26px; height: 26px; font-size: 18px; line-height: 1; cursor: pointer; margin-left: 10px; vertical-align: middle; }
   .del:active { transform: scale(.9); }
+  .daybox { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px; display: grid; gap: 12px; }
+  .dayrow { display: flex; justify-content: space-between; align-items: center; }
+  .btns2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .vbtn.sm { padding: 12px; }
+  .vbtn.sel { border-color: #f0abfc; box-shadow: 0 0 0 2px rgba(240,171,252,.4); }
+  input[type=range] { width: 100%; accent-color: #d946ef; }
   .auth { margin: 12px 0; font-size: 14px; }
   .auth .vbtn { margin-top: 4px; }
 </style>
@@ -188,9 +194,9 @@
   </header>
 
   <div class="stats">
-    <div class="stat g"><div class="n"><span id="saved">12,18</span><small> €</small></div><div class="t">non spesi da quando hai iniziato (29 ott)</div><div class="d" id="savedDetail">11,50 € spesi per la scorta · netti 0,68 € in tasca</div></div>
-    <div class="stat o"><div class="n"><span id="liquids">1</span></div><div class="t">boccette di liquido non comprate</div><div class="d" id="liquidsDetail">la prossima l'avresti comprata tra 5 giorni</div></div>
-    <div class="stat r"><div class="n">9<small>/10</small></div><div class="t">voglia più forte (2 nov)</div></div>
+    <div class="stat g"><div class="n"><span id="saved">0,68</span><small> €</small></div><div class="t">risparmiati finora (circa)</div><div class="d" id="savedDetail">12,18 € non spesi − 11,50 € di scorta</div></div>
+    <div class="stat o"><div class="n"><span id="liqBought">1</span></div><div class="t">liquidi acquistati</div><div class="d" id="liqBoughtDetail">ultimo: 6 nov</div></div>
+    <div class="stat p"><div class="n"><span id="podBought">1</span></div><div class="t">pod acquistati</div><div class="d" id="podBoughtDetail">ultimo: 6 nov</div></div>
     <div class="stat p"><div class="n">9<small> giorni</small></div><div class="t">di fila, il mio record</div></div>
   </div>
 
@@ -205,6 +211,22 @@
     </div>
     <div class="spent">spesi finora: <b><span id="spentTotal">11,50</span> €</b> <button class="mini" onclick="exportBackup()">esporta backup</button> <button class="mini" onclick="document.getElementById('importFile').click()">importa backup</button> <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importBackup(this)"> <button class="reset" onclick="resetData()">azzera dati</button></div>
     <ul class="moves" id="movements"></ul>
+  </section>
+
+  <section>
+    <h2><span class="dot">●</span> oggi</h2>
+    <p class="hint">ogni giorno segna com'è andata: quanta voglia hai avuto e se hai svapato.</p>
+    <div class="daybox">
+      <div class="dayrow"><span>voglia oggi</span><b id="vogliaVal">5/10</b></div>
+      <input type="range" min="0" max="10" step="1" value="5" id="vogliaSlider" oninput="dayDirty=true;document.getElementById('vogliaVal').textContent=this.value+'/10';">
+      <div class="btns2">
+        <button class="vbtn sm" id="dayYes" onclick="setDaySvapato(true)">sì, ho svapato</button>
+        <button class="vbtn sm" id="dayNo" onclick="setDaySvapato(false)">no, non ho svapato</button>
+      </div>
+      <button class="vbtn liq" style="width:100%" onclick="saveDay()">salva oggi</button>
+      <p class="hint" id="daySaved">ancora da segnare oggi</p>
+    </div>
+    <ul class="moves" id="dayHistory"></ul>
   </section>
 
   <section>
@@ -310,7 +332,8 @@
     log: [
       {t:'pod', d:'2026-11-06', a:4.00},
       {t:'liquido', d:'2026-11-06', a:7.50}
-    ]
+    ],
+    days: {}
   };
   var state = JSON.parse(JSON.stringify(DEFAULTS));
   var user = null, listening = false;
@@ -361,6 +384,24 @@
     saveState();
     render();
   }
+  var dayDirty = false, daySvapato = null;
+  function setDaySvapato(v){
+    daySvapato = v; dayDirty = true;
+    document.getElementById('dayYes').classList.toggle('sel', v === true);
+    document.getElementById('dayNo').classList.toggle('sel', v === false);
+  }
+  function saveDay(){
+    if (!canWrite()) { alert('Connessione a firebase in corso, riprova tra un attimo.'); return; }
+    var todayKey = localISODate(new Date());
+    if (!state.days) state.days = {};
+    state.days[todayKey] = {
+      voglia: parseInt(document.getElementById('vogliaSlider').value, 10),
+      svapato: daySvapato
+    };
+    saveState();
+    dayDirty = false;
+    render();
+  }
   function render(){
     var now = new Date();
     var lastVape = new Date(state.lastVape);
@@ -372,12 +413,14 @@
     var gross = totalDays * COST_DAY;
     var net = gross - state.spent;
     document.getElementById('dayNum').textContent = dayNum;
-    var bottles = Math.floor(totalDays / 7);
-    var nextBottleIn = (bottles + 1) * 7 - totalDays;
-    document.getElementById('liquids').textContent = bottles;
-    document.getElementById('liquidsDetail').textContent = nextBottleIn === 1 ? "la prossima l'avresti comprata domani" : "la prossima l'avresti comprata tra " + nextBottleIn + " giorni";
-    document.getElementById('saved').textContent = fmt(gross);
-    document.getElementById('savedDetail').textContent = fmt(state.spent) + ' € spesi per la scorta · netti ' + fmt(net) + ' € in tasca';
+    var liqCount = 0, podCount = 0;
+    state.log.forEach(function(e){ if (e.t === 'liquido') liqCount++; else if (e.t === 'pod') podCount++; });
+    document.getElementById('liqBought').textContent = liqCount;
+    document.getElementById('podBought').textContent = podCount;
+    document.getElementById('liqBoughtDetail').textContent = 'ultimo: ' + fmtDate(state.lastLiquid);
+    document.getElementById('podBoughtDetail').textContent = 'ultimo: ' + fmtDate(state.lastPod);
+    document.getElementById('saved').textContent = fmt(net);
+    document.getElementById('savedDetail').textContent = fmt(gross) + ' € non spesi − ' + fmt(state.spent) + ' € di scorta';
     document.getElementById('lastVapeLabel').textContent = fmtDate(state.lastVape);
     document.getElementById('lastVapeBtn').textContent = fmtDate(state.lastVape);
     document.getElementById('elapsed').textContent =
@@ -389,6 +432,27 @@
       var label = e.t === 'liquido' ? '🧴 liquido' : e.t === 'pod' ? '🔋 pod' : '🚬 svapata';
       var amt = e.a ? ' · ' + fmt(e.a) + ' €' : '';
       return '<li><span>' + label + '</span><span>' + fmtDate(e.d) + amt + ' <button class="del" onclick="removeEntry(' + i + ')">−</button></span></li>';
+    }).join('') || '<li>ancora niente segnato</li>';
+    // sezione "oggi": voglia e svapato del giorno
+    if (!state.days) state.days = {};
+    var todayKey = localISODate(new Date());
+    var todayEntry = state.days[todayKey];
+    if (!dayDirty) {
+      daySvapato = todayEntry ? todayEntry.svapato : null;
+      var sl = document.getElementById('vogliaSlider');
+      sl.value = todayEntry && typeof todayEntry.voglia === 'number' ? todayEntry.voglia : 5;
+      document.getElementById('vogliaVal').textContent = sl.value + '/10';
+      document.getElementById('dayYes').classList.toggle('sel', daySvapato === true);
+      document.getElementById('dayNo').classList.toggle('sel', daySvapato === false);
+    }
+    var tv = todayEntry && typeof todayEntry.voglia === 'number' ? todayEntry.voglia : '—';
+    document.getElementById('daySaved').textContent = todayEntry ? ('salvato: voglia ' + tv + '/10 · ' + (todayEntry.svapato === true ? 'hai svapato' : todayEntry.svapato === false ? 'non hai svapato' : '—')) : 'ancora da segnare oggi';
+    var dayKeys = Object.keys(state.days).sort().reverse().slice(0, 7);
+    document.getElementById('dayHistory').innerHTML = dayKeys.map(function(k){
+      var d = state.days[k];
+      var v = typeof d.voglia === 'number' ? d.voglia : '—';
+      var s = d.svapato === true ? 'svapato' : d.svapato === false ? 'non svapato' : '—';
+      return '<li><span>' + fmtDate(k) + '</span><span>voglia ' + v + '/10 · ' + s + '</span></li>';
     }).join('') || '<li>ancora niente segnato</li>';
   }
   function canWrite(){ return !!user; }
@@ -441,6 +505,7 @@
         }
         state = v;
         if (!Array.isArray(state.log)) state.log = state.log ? Object.keys(state.log).sort().map(function(k){ return state.log[k]; }) : [];
+        if (!state.days) state.days = {};
         render();
       }, function(e){ alert('Non riesco a leggere i dati: ' + e.message); });
     }
