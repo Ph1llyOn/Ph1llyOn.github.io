@@ -167,6 +167,8 @@
   .spent .mini, .spent .reset { margin-left: 10px; font: inherit; font-size: 12px; background: none; border: none; color: #f0abfc; text-decoration: underline; cursor: pointer; padding: 0; }
   .moves { list-style: none; margin-top: 10px; display: grid; gap: 6px; font-size: 14px; }
   .moves li { display: flex; justify-content: space-between; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 9px 13px; }
+  .auth { margin: 12px 0; font-size: 14px; }
+  .auth .vbtn { margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -192,7 +194,8 @@
 
   <section>
     <h2><span class="dot">●</span> segna tutto qui</h2>
-    <p class="hint">tre bottoni: ogni volta che svapi o compri, premi qui e i conti si aggiornano da soli. i dati restano salvati in questo browser.</p>
+    <p class="hint">tre bottoni: ogni volta che svapi o compri, premi qui e i conti si aggiornano da soli. i dati sono salvati su firebase e uguali su tutti i dispositivi.</p>
+    <div id="authBox" class="auth"></div>
     <div class="btns">
       <button class="vbtn vape" onclick="markVape()"><span class="emo">🚬</span><span>ho svapato</span><small>ultimo: <b id="lastVapeBtn">6 nov, 16:03</b></small></button>
       <button class="vbtn liq" onclick="markBuy('liquido')"><span class="emo">🧴</span><span>ho comprato il liquido</span><small>7,50 € · ultimo: <b id="lastLiquidLabel">6 nov</b></small></button>
@@ -275,23 +278,56 @@
   </footer>
 
 </div>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 <script>
   // dati di partenza (6 nov 2026): ultima svapata 16:03, scorta comprata (liquido 7,50 + pod 4,00 = 11,50 €)
   var START = new Date('2026-10-29T00:00:00+01:00'); // inizio percorso: 29 ott = giorno 1
   var COST_DAY = 494 / 365; // 7,50 €/sett liquido + 4 €/2 sett pod
   var LIQ_PRICE = 7.50, POD_PRICE = 4.00;
-  function load(k, d){ try { var v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } }
-  function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
-  var state = {
-    lastVape: load('svapo_lastVape', '2026-11-06T16:03:00+01:00'),
-    lastLiquid: load('svapo_lastLiquid', '2026-11-06'),
-    lastPod: load('svapo_lastPod', '2026-11-06'),
-    spent: load('svapo_spent', 11.50),
-    log: load('svapo_log', [
+  // firebase: i dati vivono nel Realtime Database, uguali su tutti i dispositivi
+  // (le regole permettono solo l'account filippomarcon444@gmail.com)
+  var firebaseConfig = {
+    apiKey: "AIzaSyC9-UfBqx8N8Ex4zpxiYSLXM9iJMyOF-Is",
+    authDomain: "svapo-tracker.firebaseapp.com",
+    databaseURL: "https://svapo-tracker-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "svapo-tracker",
+    storageBucket: "svapo-tracker.firebasestorage.app",
+    messagingSenderId: "351008323232",
+    appId: "1:351008323232:web:be8d1e267cf6523e22bbc5"
+  };
+  firebase.initializeApp(firebaseConfig);
+  var dbRef = firebase.database().ref('svapo');
+  var auth = firebase.auth();
+  var provider = new firebase.auth.GoogleAuthProvider();
+  var DEFAULTS = {
+    lastVape: '2026-11-06T16:03:00+01:00',
+    lastLiquid: '2026-11-06',
+    lastPod: '2026-11-06',
+    spent: 11.50,
+    log: [
       {t:'pod', d:'2026-11-06', a:4.00},
       {t:'liquido', d:'2026-11-06', a:7.50}
-    ])
+    ]
   };
+  var state = JSON.parse(JSON.stringify(DEFAULTS));
+  var user = null, listening = false;
+  // dati già segnati in questo browser prima di firebase: migrano al primo accesso
+  function localState(){
+    try {
+      var lv = localStorage.getItem('svapo_lastVape');
+      if (!lv) return null;
+      return {
+        lastVape: JSON.parse(lv),
+        lastLiquid: JSON.parse(localStorage.getItem('svapo_lastLiquid') || '"2026-11-06"'),
+        lastPod: JSON.parse(localStorage.getItem('svapo_lastPod') || '"2026-11-06"'),
+        spent: JSON.parse(localStorage.getItem('svapo_spent') || '11.5'),
+        log: JSON.parse(localStorage.getItem('svapo_log') || '[]')
+      };
+    } catch(e){ return null; }
+  }
+  function saveState(){ if (user) dbRef.set(state); }
   function fmt(n){ return n.toFixed(2).replace('.', ','); }
   function fmtDate(iso){
     var d = new Date(iso.length === 10 ? iso + 'T12:00:00+01:00' : iso);
@@ -329,31 +365,61 @@
       return '<li><span>' + label + '</span><span>' + fmtDate(e.d) + amt + '</span></li>';
     }).join('') || '<li>ancora niente segnato</li>';
   }
+  function signIn(){ auth.signInWithPopup(provider).catch(function(e){ alert('Accesso non riuscito: ' + e.message); }); }
+  function signOut(){ auth.signOut(); }
+  function updateAuthUI(){
+    var el = document.getElementById('authBox');
+    if (user) {
+      el.innerHTML = 'connesso come <b>' + user.email + '</b> · dati salvati su firebase, uguali ovunque <button class="mini" onclick="signOut()">esci</button>';
+    } else {
+      el.innerHTML = '<button class="vbtn liq" style="width:100%" onclick="signIn()"><span class="emo">🔑</span><span>accedi con google</span><small>serve per salvare i dati su firebase</small></button>';
+    }
+  }
   function markVape(){
+    if (!user) { signIn(); return; }
     if (!confirm('Segno che hai svapato adesso? Il counter dei giorni riparte da 1.')) return;
     var now = new Date();
     state.lastVape = now.toISOString();
     state.log.unshift({t:'svapo', d: now.toISOString(), a:0});
-    save('svapo_lastVape', state.lastVape);
-    save('svapo_log', state.log);
+    saveState();
     render();
   }
   function markBuy(kind){
+    if (!user) { signIn(); return; }
     var price = kind === 'liquido' ? LIQ_PRICE : POD_PRICE;
     var today = localISODate(new Date());
     state.spent = Math.round((state.spent + price) * 100) / 100;
     if (kind === 'liquido') state.lastLiquid = today; else state.lastPod = today;
     state.log.unshift({t:kind, d: today, a: price});
-    save('svapo_spent', state.spent);
-    save(kind === 'liquido' ? 'svapo_lastLiquid' : 'svapo_lastPod', today);
-    save('svapo_log', state.log);
+    saveState();
     render();
   }
   function resetData(){
-    if (!confirm('Azzero tutti i dati salvati su questo browser e torno ai valori del 6 novembre?')) return;
-    Object.keys(localStorage).filter(function(k){ return k.indexOf('svapo_') === 0; }).forEach(function(k){ localStorage.removeItem(k); });
-    location.reload();
+    if (!user) { signIn(); return; }
+    if (!confirm('Azzero tutti i dati su firebase e torno ai valori del 6 novembre?')) return;
+    state = JSON.parse(JSON.stringify(DEFAULTS));
+    saveState();
+    render();
   }
+  auth.onAuthStateChanged(function(u){
+    user = u;
+    updateAuthUI();
+    if (u && !listening) {
+      listening = true;
+      dbRef.on('value', function(snap){
+        var v = snap.val();
+        if (!v) {
+          var seed = localState() || JSON.parse(JSON.stringify(DEFAULTS));
+          dbRef.set(seed);
+          return;
+        }
+        state = v;
+        if (!Array.isArray(state.log)) state.log = state.log ? Object.keys(state.log).sort().map(function(k){ return state.log[k]; }) : [];
+        render();
+      }, function(e){ alert('Non riesco a leggere i dati: ' + e.message); });
+    }
+    if (!u) { state = JSON.parse(JSON.stringify(DEFAULTS)); render(); }
+  });
   function exportBackup(){
     var blob = new Blob([JSON.stringify(state, null, 2)], {type: 'application/json'});
     var a = document.createElement('a');
@@ -375,11 +441,15 @@
         state.lastPod = d.lastPod || state.lastPod;
         state.spent = d.spent;
         state.log = d.log;
-        save('svapo_lastVape', state.lastVape);
-        save('svapo_lastLiquid', state.lastLiquid);
-        save('svapo_lastPod', state.lastPod);
-        save('svapo_spent', state.spent);
-        save('svapo_log', state.log);
+        if (user) { dbRef.set(state); } else {
+          try {
+            localStorage.setItem('svapo_lastVape', JSON.stringify(state.lastVape));
+            localStorage.setItem('svapo_lastLiquid', JSON.stringify(state.lastLiquid));
+            localStorage.setItem('svapo_lastPod', JSON.stringify(state.lastPod));
+            localStorage.setItem('svapo_spent', JSON.stringify(state.spent));
+            localStorage.setItem('svapo_log', JSON.stringify(state.log));
+          } catch(e){}
+        }
         render();
         alert('Backup importato');
       } catch(e){ alert('File non valido: ' + e.message); }
