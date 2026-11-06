@@ -146,6 +146,27 @@
 
   footer { margin-top: 40px; text-align: center; font-size: 13px; opacity: .6; }
   footer a { color: #f0abfc; }
+
+  /* bottoni segna-tutto */
+  .stat .d { font-size: 12px; opacity: .7; margin-top: 2px; }
+  .btns { display: grid; gap: 12px; }
+  @media (min-width: 640px) { .btns { grid-template-columns: repeat(3, 1fr); } }
+  .vbtn {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    font: inherit; color: #fff; cursor: pointer;
+    background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px 12px;
+  }
+  .vbtn:active { transform: scale(.97); }
+  .vbtn .emo { font-size: 30px; }
+  .vbtn span { font-weight: 800; font-size: 15px; }
+  .vbtn small { font-size: 12px; opacity: .75; }
+  .vbtn.vape { background: linear-gradient(135deg, rgba(239,68,68,.35), rgba(249,115,22,.25)); border-color: rgba(239,68,68,.5); }
+  .vbtn.liq { background: linear-gradient(135deg, rgba(124,58,237,.35), rgba(217,70,239,.25)); border-color: rgba(217,70,239,.5); }
+  .vbtn.pod { background: linear-gradient(135deg, rgba(16,185,129,.3), rgba(163,230,53,.2)); border-color: rgba(163,230,53,.45); }
+  .spent { margin-top: 14px; font-size: 14px; opacity: .9; }
+  .spent .reset { margin-left: 10px; font: inherit; font-size: 12px; background: none; border: none; color: #f0abfc; text-decoration: underline; cursor: pointer; padding: 0; }
+  .moves { list-style: none; margin-top: 10px; display: grid; gap: 6px; font-size: 14px; }
+  .moves li { display: flex; justify-content: space-between; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 9px 13px; }
 </style>
 </head>
 <body>
@@ -158,16 +179,28 @@
     <div class="counter">
       <div class="big"><span id="dayNum">1</span><small>° giorno</small></div>
       <div class="label">senza svapare</div>
-      <div class="since">ultima svapata: <b>6 novembre 2026, ore 16:03</b><br><span id="elapsed"></span></div>
+      <div class="since">ultima svapata: <b id="lastVapeLabel">6 novembre 2026, ore 16:03</b><br><span id="elapsed"></span></div>
     </div>
   </header>
 
   <div class="stats">
-    <div class="stat g"><div class="n"><span id="saved">13,53</span><small> €</small></div><div class="t">risparmiati finora (circa)</div></div>
-    <div class="stat o"><div class="n"><span id="liquids">1,4</span></div><div class="t">liquidi non comprati (circa)</div></div>
+    <div class="stat g"><div class="n"><span id="saved">0,68</span><small> €</small></div><div class="t">risparmiati finora (circa)</div><div class="d" id="savedDetail">lordi 12,18 € · spesi 11,50 €</div></div>
+    <div class="stat o"><div class="n"><span id="liquids">1,3</span></div><div class="t">liquidi non comprati (circa)</div></div>
     <div class="stat r"><div class="n">9<small>/10</small></div><div class="t">voglia più forte (2 nov)</div></div>
     <div class="stat p"><div class="n">9<small> giorni</small></div><div class="t">di fila, il mio record</div></div>
   </div>
+
+  <section>
+    <h2><span class="dot">●</span> segna tutto qui</h2>
+    <p class="hint">tre bottoni: ogni volta che svapi o compri, premi qui e i conti si aggiornano da soli. i dati restano salvati in questo browser.</p>
+    <div class="btns">
+      <button class="vbtn vape" onclick="markVape()"><span class="emo">🚬</span><span>ho svapato</span><small>ultimo: <b id="lastVapeBtn">6 nov, 16:03</b></small></button>
+      <button class="vbtn liq" onclick="markBuy('liquido')"><span class="emo">🧴</span><span>ho comprato il liquido</span><small>7,50 € · ultimo: <b id="lastLiquidLabel">6 nov</b></small></button>
+      <button class="vbtn pod" onclick="markBuy('pod')"><span class="emo">🔋</span><span>ho comprato il pod</span><small>4 € · ultimo: <b id="lastPodLabel">6 nov</b></small></button>
+    </div>
+    <div class="spent">spesi finora: <b><span id="spentTotal">11,50</span> €</b> <button class="reset" onclick="resetData()">azzera dati</button></div>
+    <ul class="moves" id="movements"></ul>
+  </section>
 
   <section>
     <h2><span class="dot">●</span> il piano</h2>
@@ -243,25 +276,86 @@
 
 </div>
 <script>
-  // ultima svapata: 6 novembre 2026, ore 16:03
-  var LAST = new Date('2026-11-06T16:03:00+01:00');
+  // dati di partenza (6 nov 2026): ultima svapata 16:03, scorta comprata (liquido 7,50 + pod 4,00 = 11,50 €)
+  var START = new Date('2026-10-29T00:00:00+01:00'); // inizio percorso: 29 ott = giorno 1
   var COST_DAY = 494 / 365; // 7,50 €/sett liquido + 4 €/2 sett pod
-  var DAYS_BEFORE = 9; // giorni della striscia precedente (29 ott – 6 nov): i soldi risparmiati non si azzerano
+  var LIQ_PRICE = 7.50, POD_PRICE = 4.00;
+  function load(k, d){ try { var v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } }
+  function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+  var state = {
+    lastVape: load('svapo_lastVape', '2026-11-06T16:03:00+01:00'),
+    lastLiquid: load('svapo_lastLiquid', '2026-11-06'),
+    lastPod: load('svapo_lastPod', '2026-11-06'),
+    spent: load('svapo_spent', 11.50),
+    log: load('svapo_log', [
+      {t:'pod', d:'2026-11-06', a:4.00},
+      {t:'liquido', d:'2026-11-06', a:7.50}
+    ])
+  };
   function fmt(n){ return n.toFixed(2).replace('.', ','); }
-  function tick(){
+  function fmtDate(iso){
+    var d = new Date(iso.length === 10 ? iso + 'T12:00:00+01:00' : iso);
+    var s = d.toLocaleDateString('it-IT', {day:'numeric', month:'short'});
+    if (iso.length > 10) s += ', ' + d.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'});
+    return s;
+  }
+  function localISODate(d){
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function render(){
     var now = new Date();
-    var ms = now - LAST;
+    var lastVape = new Date(state.lastVape);
+    var ms = now - lastVape;
+    var dayNum = Math.floor(ms / 86400000) + 1;
     var days = Math.floor(ms / 86400000);
-    var dayNum = days + 1; // 29 ott = giorno 1
     var hours = Math.floor((ms % 86400000) / 3600000);
+    var totalDays = Math.floor((now - START) / 86400000) + 1; // giorni dal 29 ott
+    var gross = totalDays * COST_DAY;
+    var net = gross - state.spent;
     document.getElementById('dayNum').textContent = dayNum;
-    document.getElementById('liquids').textContent = ((DAYS_BEFORE + dayNum) / 7).toFixed(1).replace('.', ',');
-    document.getElementById('saved').textContent = fmt((DAYS_BEFORE + dayNum) * COST_DAY);
+    document.getElementById('liquids').textContent = (totalDays / 7).toFixed(1).replace('.', ',');
+    document.getElementById('saved').textContent = fmt(net);
+    document.getElementById('savedDetail').textContent = 'lordi ' + fmt(gross) + ' € · spesi ' + fmt(state.spent) + ' €';
+    document.getElementById('lastVapeLabel').textContent = fmtDate(state.lastVape);
+    document.getElementById('lastVapeBtn').textContent = fmtDate(state.lastVape);
     document.getElementById('elapsed').textContent =
       'sono passati ' + days + ' giorni e ' + hours + ' ore dall\'ultima svapata';
+    document.getElementById('lastLiquidLabel').textContent = fmtDate(state.lastLiquid);
+    document.getElementById('lastPodLabel').textContent = fmtDate(state.lastPod);
+    document.getElementById('spentTotal').textContent = fmt(state.spent);
+    document.getElementById('movements').innerHTML = state.log.slice(0, 5).map(function(e){
+      var label = e.t === 'liquido' ? '🧴 liquido' : e.t === 'pod' ? '🔋 pod' : '🚬 svapata';
+      var amt = e.a ? ' · ' + fmt(e.a) + ' €' : '';
+      return '<li><span>' + label + '</span><span>' + fmtDate(e.d) + amt + '</span></li>';
+    }).join('') || '<li>ancora niente segnato</li>';
   }
-  tick();
-  setInterval(tick, 60000);
+  function markVape(){
+    if (!confirm('Segno che hai svapato adesso? Il counter dei giorni riparte da 1.')) return;
+    var now = new Date();
+    state.lastVape = now.toISOString();
+    state.log.unshift({t:'svapo', d: now.toISOString(), a:0});
+    save('svapo_lastVape', state.lastVape);
+    save('svapo_log', state.log);
+    render();
+  }
+  function markBuy(kind){
+    var price = kind === 'liquido' ? LIQ_PRICE : POD_PRICE;
+    var today = localISODate(new Date());
+    state.spent = Math.round((state.spent + price) * 100) / 100;
+    if (kind === 'liquido') state.lastLiquid = today; else state.lastPod = today;
+    state.log.unshift({t:kind, d: today, a: price});
+    save('svapo_spent', state.spent);
+    save(kind === 'liquido' ? 'svapo_lastLiquid' : 'svapo_lastPod', today);
+    save('svapo_log', state.log);
+    render();
+  }
+  function resetData(){
+    if (!confirm('Azzero tutti i dati salvati su questo browser e torno ai valori del 6 novembre?')) return;
+    Object.keys(localStorage).filter(function(k){ return k.indexOf('svapo_') === 0; }).forEach(function(k){ localStorage.removeItem(k); });
+    location.reload();
+  }
+  render();
+  setInterval(render, 60000);
 </script>
 </body>
 </html>
