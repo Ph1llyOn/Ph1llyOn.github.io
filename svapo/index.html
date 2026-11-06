@@ -157,7 +157,6 @@
     background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px 12px;
   }
   .vbtn:active { transform: scale(.97); }
-  .vbtn:disabled { opacity: .35; }
   .vbtn .emo { font-size: 30px; }
   .vbtn span { font-weight: 800; font-size: 15px; }
   .vbtn small { font-size: 12px; opacity: .75; }
@@ -168,6 +167,8 @@
   .spent .mini, .spent .reset { margin-left: 10px; font: inherit; font-size: 12px; background: none; border: none; color: #f0abfc; text-decoration: underline; cursor: pointer; padding: 0; }
   .moves { list-style: none; margin-top: 10px; display: grid; gap: 6px; font-size: 14px; }
   .moves li { display: flex; justify-content: space-between; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 9px 13px; }
+  .del { background: #ef4444; color: #fff; border: none; border-radius: 50%; width: 26px; height: 26px; font-size: 18px; line-height: 1; cursor: pointer; margin-left: 10px; vertical-align: middle; }
+  .del:active { transform: scale(.9); }
   .auth { margin: 12px 0; font-size: 14px; }
   .auth .vbtn { margin-top: 4px; }
 </style>
@@ -201,7 +202,6 @@
       <button class="vbtn vape" onclick="markVape()"><span class="emo">🚬</span><span>ho svapato</span><small>ultimo: <b id="lastVapeBtn">6 nov, 16:03</b></small></button>
       <button class="vbtn liq" onclick="markBuy('liquido')"><span class="emo">🧴</span><span>ho comprato il liquido</span><small>7,50 € · ultimo: <b id="lastLiquidLabel">6 nov</b></small></button>
       <button class="vbtn pod" onclick="markBuy('pod')"><span class="emo">🔋</span><span>ho comprato il pod</span><small>4 € · ultimo: <b id="lastPodLabel">6 nov</b></small></button>
-      <button class="vbtn" id="undoBtn" onclick="undoLast()" disabled><span class="emo">↩️</span><span>annulla ultimo</span><small id="undoLabel">niente da annullare</small></button>
     </div>
     <div class="spent">spesi finora: <b><span id="spentTotal">11,50</span> €</b> <button class="mini" onclick="exportBackup()">esporta backup</button> <button class="mini" onclick="document.getElementById('importFile').click()">importa backup</button> <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importBackup(this)"> <button class="reset" onclick="resetData()">azzera dati</button></div>
     <ul class="moves" id="movements"></ul>
@@ -339,15 +339,25 @@
   function localISODate(d){
     return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   }
-  var prevState = null, prevLabel = '';
-  function snapshot(label){
-    prevState = JSON.parse(JSON.stringify(state));
-    prevLabel = label;
+  function lastOf(t){
+    for (var i = 0; i < state.log.length; i++) if (state.log[i].t === t) return state.log[i];
+    return null;
   }
-  function undoLast(){
-    if (!prevState) return;
-    state = prevState;
-    prevState = null; prevLabel = '';
+  function recomputeLast(){
+    var sv = lastOf('svapo'), pd = lastOf('pod'), lq = lastOf('liquido');
+    state.lastVape = sv ? sv.d : '2026-11-06T16:03:00+01:00';
+    state.lastPod = pd ? pd.d.slice(0, 10) : '2026-11-06';
+    state.lastLiquid = lq ? lq.d.slice(0, 10) : '2026-11-06';
+  }
+  function removeEntry(idx){
+    var e = state.log[idx];
+    if (!e) return;
+    var what = e.t === 'liquido' ? 'liquido' : e.t === 'pod' ? 'pod' : 'svapata';
+    if (!confirm('Tolgo questa voce (' + what + ' del ' + fmtDate(e.d) + ')? I conti si aggiornano di conseguenza.')) return;
+    state.log.splice(idx, 1);
+    if (e.t === 'pod') state.spent = Math.max(0, Math.round((state.spent - POD_PRICE) * 100) / 100);
+    if (e.t === 'liquido') state.spent = Math.max(0, Math.round((state.spent - LIQ_PRICE) * 100) / 100);
+    recomputeLast();
     saveState();
     render();
   }
@@ -372,14 +382,11 @@
     document.getElementById('lastLiquidLabel').textContent = fmtDate(state.lastLiquid);
     document.getElementById('lastPodLabel').textContent = fmtDate(state.lastPod);
     document.getElementById('spentTotal').textContent = fmt(state.spent);
-    document.getElementById('movements').innerHTML = state.log.slice(0, 5).map(function(e){
+    document.getElementById('movements').innerHTML = state.log.slice(0, 5).map(function(e, i){
       var label = e.t === 'liquido' ? '🧴 liquido' : e.t === 'pod' ? '🔋 pod' : '🚬 svapata';
       var amt = e.a ? ' · ' + fmt(e.a) + ' €' : '';
-      return '<li><span>' + label + '</span><span>' + fmtDate(e.d) + amt + '</span></li>';
+      return '<li><span>' + label + '</span><span>' + fmtDate(e.d) + amt + ' <button class="del" onclick="removeEntry(' + i + ')">−</button></span></li>';
     }).join('') || '<li>ancora niente segnato</li>';
-    var ub = document.getElementById('undoBtn');
-    ub.disabled = !prevState;
-    document.getElementById('undoLabel').textContent = prevState ? ('ultimo: ' + prevLabel) : 'niente da annullare';
   }
   function canWrite(){ return !!user; }
   var anonTried = false;
@@ -391,7 +398,6 @@
     if (!canWrite()) { alert('Connessione a firebase in corso, riprova tra un attimo.'); return; }
     if (!confirm('Segno che hai svapato adesso? Il counter dei giorni riparte da 1.')) return;
     var now = new Date();
-    snapshot('svapata');
     state.lastVape = now.toISOString();
     state.log.unshift({t:'svapo', d: now.toISOString(), a:0});
     saveState();
@@ -401,7 +407,6 @@
     if (!canWrite()) { alert('Connessione a firebase in corso, riprova tra un attimo.'); return; }
     var price = kind === 'liquido' ? LIQ_PRICE : POD_PRICE;
     var today = localISODate(new Date());
-    snapshot(kind === 'liquido' ? 'liquido · 7,50 €' : 'pod · 4,00 €');
     state.spent = Math.round((state.spent + price) * 100) / 100;
     if (kind === 'liquido') state.lastLiquid = today; else state.lastPod = today;
     state.log.unshift({t:kind, d: today, a: price});
@@ -411,7 +416,6 @@
   function resetData(){
     if (!canWrite()) { alert('Connessione a firebase in corso, riprova tra un attimo.'); return; }
     if (!confirm('Azzero tutti i dati su firebase e torno ai valori del 6 novembre?')) return;
-    snapshot('azzera dati');
     state = JSON.parse(JSON.stringify(DEFAULTS));
     saveState();
     render();
@@ -454,7 +458,6 @@
       try {
         var d = JSON.parse(r.result);
         if (!d || typeof d.lastVape !== 'string' || typeof d.spent !== 'number' || !Array.isArray(d.log)) throw new Error('formato non valido');
-        snapshot('import backup');
         state.lastVape = d.lastVape;
         state.lastLiquid = d.lastLiquid || state.lastLiquid;
         state.lastPod = d.lastPod || state.lastPod;
