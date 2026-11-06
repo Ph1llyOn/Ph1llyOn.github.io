@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>senza svapo — il mio percorso</title>
+<meta name="description" content="Il percorso di Phill: giorni senza svapare, voglie, trucchi e soldi risparmiati.">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --violet: #7c3aed;
+    --fuchsia: #d946ef;
+    --orange: #f97316;
+    --lime: #a3e635;
+    --ink: #0f0c29;
+    --card: rgba(255,255,255,.07);
+    --line: rgba(255,255,255,.14);
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--ink);
+    color: #f4f2ff;
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 18px 60px; }
+
+  /* hero */
+  header {
+    background: linear-gradient(135deg, var(--violet), var(--fuchsia) 55%, var(--orange));
+    border-radius: 0 0 32px 32px;
+    padding: 44px 22px 34px;
+    text-align: center;
+    box-shadow: 0 18px 50px rgba(217,70,239,.35);
+  }
+  header .kicker {
+    font-size: 13px; letter-spacing: .22em; text-transform: uppercase;
+    opacity: .85; font-weight: 700;
+  }
+  header h1 { font-size: clamp(30px, 7vw, 46px); line-height: 1.1; margin: 10px 0 4px; }
+  header p.sub { opacity: .92; font-size: 16px; }
+  .counter {
+    margin: 26px auto 0;
+    background: rgba(0,0,0,.28);
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 24px;
+    padding: 20px 16px 16px;
+    max-width: 420px;
+  }
+  .counter .big { font-size: 84px; font-weight: 900; line-height: .95; }
+  .counter .big small { font-size: 30px; font-weight: 800; }
+  .counter .label { font-size: 17px; font-weight: 700; margin-top: 2px; }
+  .counter .since { font-size: 13px; opacity: .85; margin-top: 8px; }
+  .counter .since b { color: #fff; }
+
+  /* stats */
+  .stats {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+    margin-top: 22px;
+  }
+  @media (min-width: 640px) { .stats { grid-template-columns: repeat(4, 1fr); } }
+  .stat {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 18px; padding: 16px 14px;
+  }
+  .stat .n { font-size: 30px; font-weight: 900; line-height: 1.1; }
+  .stat .n small { font-size: 16px; }
+  .stat .t { font-size: 13px; opacity: .8; margin-top: 2px; }
+  .stat.g .n { color: var(--lime); }
+  .stat.o .n { color: #fdba74; }
+  .stat.p .n { color: #f0abfc; }
+  .stat.r .n { color: #fca5a5; }
+
+  section { margin-top: 34px; }
+  h2 { font-size: 22px; margin-bottom: 4px; }
+  h2 .dot { color: var(--fuchsia); }
+  .hint { font-size: 14px; opacity: .75; margin-bottom: 14px; }
+
+  /* plan */
+  .plan { display: grid; gap: 12px; }
+  @media (min-width: 640px) { .plan { grid-template-columns: 1fr 1fr; } }
+  .plan .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 18px; padding: 16px;
+  }
+  .plan .card .ico { font-size: 26px; }
+  .plan .card h3 { font-size: 16px; margin: 6px 0 3px; }
+  .plan .card p { font-size: 14px; opacity: .85; }
+
+  /* cravings */
+  .crave { display: grid; gap: 10px; }
+  .row { display: grid; grid-template-columns: 74px 1fr 92px; gap: 10px; align-items: center; font-size: 14px; }
+  .row .d { opacity: .75; font-weight: 600; }
+  .row .bar { height: 14px; background: rgba(255,255,255,.09); border-radius: 99px; overflow: hidden; }
+  .row .bar i { display: block; height: 100%; border-radius: 99px; }
+  .row .v { text-align: right; font-weight: 700; }
+  .b-none i { background: var(--lime); width: 4%; }
+  .b-poco i { background: #fde047; width: 30%; }
+  .b-medio i { background: var(--orange); width: 48%; }
+  .b-forte i { background: #fb7185; width: 75%; }
+  .b-max i { background: #ef4444; width: 92%; }
+
+  /* timeline */
+  .tl { position: relative; padding-left: 22px; }
+  .tl::before {
+    content: ""; position: absolute; left: 6px; top: 6px; bottom: 6px;
+    width: 2px; background: linear-gradient(var(--violet), var(--fuchsia), var(--orange));
+    border-radius: 2px;
+  }
+  .tl .ev { position: relative; padding: 0 0 18px 12px; }
+  .tl .ev::before {
+    content: ""; position: absolute; left: -22px; top: 5px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--fuchsia); border: 2px solid var(--ink);
+    box-shadow: 0 0 0 2px var(--fuchsia);
+  }
+  .tl .ev.today::before { background: var(--lime); box-shadow: 0 0 0 2px var(--lime); }
+  .tl .ev .when { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; opacity: .65; font-weight: 700; }
+  .tl .ev h3 { font-size: 16px; margin: 2px 0; }
+  .tl .ev p { font-size: 14px; opacity: .85; }
+  .tl .ev .tag {
+    display: inline-block; margin-top: 5px; font-size: 12px; font-weight: 700;
+    background: rgba(163,230,53,.16); color: var(--lime);
+    border: 1px solid rgba(163,230,53,.35); padding: 2px 9px; border-radius: 99px;
+  }
+  .tl .ev .tag.warn { background: rgba(249,115,22,.14); color: #fdba74; border-color: rgba(249,115,22,.4); }
+
+  /* tricks */
+  .chips { display: flex; flex-wrap: wrap; gap: 9px; }
+  .chip {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 99px; padding: 9px 15px; font-size: 14px; font-weight: 600;
+  }
+  .chip b { color: #f0abfc; }
+
+  /* pact */
+  .pact {
+    background: linear-gradient(135deg, rgba(124,58,237,.35), rgba(217,70,239,.22));
+    border: 1px solid rgba(217,70,239,.45);
+    border-radius: 20px; padding: 20px;
+  }
+  .pact h2 { margin-bottom: 8px; }
+  .pact ul { list-style: none; display: grid; gap: 8px; font-size: 15px; }
+  .pact li::before { content: "✓ "; color: var(--lime); font-weight: 900; }
+
+  footer { margin-top: 40px; text-align: center; font-size: 13px; opacity: .6; }
+  footer a { color: #f0abfc; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">il mio percorso</div>
+    <h1>senza svapo 💨🚫</h1>
+    <p class="sub">giorni, voglie, trucchi e soldi risparmiati — tutto segnato qui.</p>
+    <div class="counter">
+      <div class="big"><span id="dayNum">9</span><small>° giorno</small></div>
+      <div class="label">senza svapare</div>
+      <div class="since">ultima svapata: <b>28 ottobre 2026, ore 18:44</b><br><span id="elapsed"></span></div>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat g"><div class="n"><span id="saved">11,40</span><small> €</small></div><div class="t">risparmiati finora (circa)</div></div>
+    <div class="stat o"><div class="n"><span id="pods">9</span></div><div class="t">pod non usati (circa)</div></div>
+    <div class="stat r"><div class="n">9<small>/10</small></div><div class="t">voglia più forte (2 nov)</div></div>
+    <div class="stat p"><div class="n"><span id="streak">9</span><small> giorni</small></div><div class="t">di fila, il mio record</div></div>
+  </div>
+
+  <section>
+    <h2><span class="dot">●</span> il piano</h2>
+    <p class="hint">non smettere del tutto per ora — spendere meno e rimandare le voglie senza senso.</p>
+    <div class="plan">
+      <div class="card"><div class="ico">💰</div><h3>spendere meno</h3><p>prima spendevo 6,90&nbsp;€ a settimana di liquido + un pod da 4&nbsp;€ ogni due settimane: circa 462,80&nbsp;€ l'anno. sta funzionando.</p></div>
+      <div class="card"><div class="ico">⏳</div><h3>rimandare le voglie</h3><p>le voglie senza motivo dietro — tipo innervosismo — le rimando, non le assecondo subito.</p></div>
+      <div class="card"><div class="ico">📦</div><h3>scorta solo per i momenti difficili</h3><p>pod e liquido comprati il 6 novembre, solo per quando ci sono problemi a casa, devo tranquillizzarmi o sono innervosito.</p></div>
+      <div class="card"><div class="ico">📱</div><h3>juno controlla, io riferisco</h3><p>check-in ogni giorno, e io dico se, quando e quanto ho svapato. ale mi aiuta da lontano.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="dot">●</span> le voglie</h2>
+    <p class="hint">come sono andate, giorno per giorno. solo quello che ho riferito davvero.</p>
+    <div class="crave">
+      <div class="row"><span class="d">29 ott</span><div class="bar b-forte"><i></i></div><span class="v">molta voglia</span></div>
+      <div class="row"><span class="d">2 nov</span><div class="bar b-max"><i></i></div><span class="v">9 su 10 🔥</span></div>
+      <div class="row"><span class="d">3 nov</span><div class="bar b-forte"><i></i></div><span class="v">forte</span></div>
+      <div class="row"><span class="d">4 nov</span><div class="bar b-medio"><i></i></div><span class="v">presente</span></div>
+      <div class="row"><span class="d">5 nov</span><div class="bar b-none"><i></i></div><span class="v">nessuna 🙂</span></div>
+      <div class="row"><span class="d">6 nov</span><div class="bar b-poco"><i></i></div><span class="v">un po'</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="dot">●</span> la timeline</h2>
+    <p class="hint">dal giorno 1 a oggi.</p>
+    <div class="tl">
+      <div class="ev"><div class="when">28 ott · giorno 0</div><h3>ultima svapata</h3><p>ore 18:44. finiti liquido e pod: non ho più niente da svapare.</p></div>
+      <div class="ev"><div class="when">29 ott · giorno 1</div><h3>primo giorno intero senza niente</h3><p>di notte butto boccetta e pod finiti. resta solo la Wenax da annusare.</p></div>
+      <div class="ev"><div class="when">30 ott · giorno 2</div><h3>secondo giorno fatto ✓</h3><p>confermato: “secondo giorno senza svapo fatto”.</p></div>
+      <div class="ev"><div class="when">31 ott · giorno 3</div><h3>“per ora chill”</h3><p>la sera c'è una festicciola di halloween — momento a rischio, superato.</p></div>
+      <div class="ev"><div class="when">1 nov · giorno 4</div><h3>giornata impegnata, bene</h3><p>al momento bene, la giornata passa senza pensarci troppo.</p></div>
+      <div class="ev"><div class="when">2 nov · giorno 5</div><h3>voglia 9/10 la sera</h3><p>mi mancano il vuoto, il nervosismo, il gesto di inspirare e il colpo in gola. patto: 10 minuti + scrivo a juno prima di comprare. caramelle come sostituto.</p><span class="tag warn">momento più duro</span></div>
+      <div class="ev"><div class="when">3 nov · giorno 6</div><h3>voglia forte</h3><p>il momento che mi frega è l'attesa del bus dopo scuola, 16:00–16:40. sera stressante: litigio dei genitori, nonna in ospedale.</p></div>
+      <div class="ev"><div class="when">4 nov · giorno 7</div><h3>una settimana intera 🎉</h3><p>giornata tranquilla, voglia presente. decido: venerdì compro pod e liquido come scorta.</p><span class="tag">7 giorni</span></div>
+      <div class="ev"><div class="when">5 nov · giorno 8</div><h3>giornata tranquilla</h3><p>nessuna voglia riferita, nessun acquisto.</p></div>
+      <div class="ev today"><div class="when">6 nov · giorno 9</div><h3>la scorta è a casa</h3><p>pod e liquido presi dopo le 15:30. voglia un po' nel pomeriggio, ma scrivo a juno prima di usare. il piano nuovo è ufficiale.</p><span class="tag">oggi</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="dot">●</span> i trucchi che funzionano</h2>
+    <p class="hint">quando arriva la voglia, prima queste.</p>
+    <div class="chips">
+      <span class="chip"><b>10 minuti</b> — aspetto e faccio altro</span>
+      <span class="chip"><b>💧</b> bicchierone d'acqua</span>
+      <span class="chip"><b>🍬</b> gomme senza zucchero</span>
+      <span class="chip"><b>🚶</b> cambio stanza</span>
+      <span class="chip"><b>🛣️</b> evito la strada del negozio</span>
+      <span class="chip"><b>🙅</b> nessuno me lo compra né me lo passa</span>
+      <span class="chip"><b>💰</b> i soldi risparmiati vanno nel fondo tesla</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="pact">
+      <h2>il patto 🤝</h2>
+      <ul>
+        <li>prima di usare la scorta, scrivo a juno</li>
+        <li>comprare non azzera il conto — lo azzera solo svapare</li>
+        <li>una ricaduta non cancella tutto: si riparte da lì</li>
+        <li>se svapo, lo dico: il counter deve restare vero</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    aggiornato al 6 novembre 2026 · il counter parte dall'ultima svapata (28 ott 2026, 18:44)<br>
+    fatto con juno · <a href="https://ph1llyon.github.io/">torna al sito</a>
+  </footer>
+
+</div>
+<script>
+  // ultima svapata: 28 ottobre 2026, ore 18:44
+  var LAST = new Date('2026-10-28T18:44:00+01:00');
+  var COST_DAY = 462.80 / 365; // 6,90 €/sett liquido + 4 €/2 sett pod
+  function fmt(n){ return n.toFixed(2).replace('.', ','); }
+  function tick(){
+    var now = new Date();
+    var ms = now - LAST;
+    var days = Math.floor(ms / 86400000);
+    var dayNum = days + 1; // 29 ott = giorno 1
+    var hours = Math.floor((ms % 86400000) / 3600000);
+    document.getElementById('dayNum').textContent = dayNum;
+    document.getElementById('streak').textContent = dayNum;
+    document.getElementById('pods').textContent = dayNum;
+    document.getElementById('saved').textContent = fmt(dayNum * COST_DAY);
+    document.getElementById('elapsed').textContent =
+      'sono passati ' + days + ' giorni e ' + hours + ' ore dall\'ultima svapata';
+  }
+  tick();
+  setInterval(tick, 60000);
+</script>
+</body>
+</html>
